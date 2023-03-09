@@ -11,6 +11,11 @@ namespace Purge_Rooms_UI
 {
     public class FailurePreprocessor_Event
     {
+        public static void TestProcessor(object sender, FailuresProcessingEventArgs e)
+        {
+            Console.WriteLine("Shit!");
+        }
+
         public static void ProcessFailures_Events(object sender, FailuresProcessingEventArgs e)
         {
             FailuresAccessor fas = e.GetFailuresAccessor();
