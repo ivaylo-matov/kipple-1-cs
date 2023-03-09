@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.UI;
 using System;
 using System.Reflection;
 using System.Windows.Media.Imaging;
@@ -150,6 +151,8 @@ namespace Purge_Rooms_UI
         public Result OnStartup(UIControlledApplication application)
         {
             // call our method that will load up our toolbar
+            application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailures_Events);
+
             AddRibbonPanel(application);
             return Result.Succeeded;
         }
