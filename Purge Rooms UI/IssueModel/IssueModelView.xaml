@@ -1,0 +1,120 @@
+﻿<Window x:Class="Purge_Rooms_UI.IssueModelView"
+        x:Name='IssueModelWindow'
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStartupLocation='CenterScreen'
+        BorderThickness='0,3,0,0'
+        BorderBrush='#FCC020'
+        Title='Issue Model'
+        MinWidth='430'
+        Height='auto'
+        SizeToContent='WidthAndHeight'>
+
+  <Border Margin='10'>
+
+    <StackPanel>
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Left'
+                  Margin='0,5,0,0'>
+        <Label Content='Issued to :'
+               Width='150' />
+        <TextBox x:Name='issuedToBox'
+                 MinWidth='250' Text='DT'/>
+      </StackPanel>
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Left'
+                  Margin='0,5,0,0'>
+        <Label Content='Issued by :'
+               Width='150' />
+        <TextBox x:Name='issuedByBox'
+                 MinWidth='250' />
+      </StackPanel>
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Left'
+                  Margin='0,5,0,0'>
+        <Label Content='Approved by :'
+               Width='150' />
+        <TextBox x:Name='approvedByBox'
+                 MinWidth='250' />
+      </StackPanel>
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Left'
+                  Margin='0,5,0,0'>
+        <Label Content='Revision description :'
+               Width='150' />
+        <TextBox x:Name='revDescribBox'
+                 MinWidth='250'
+                 Text='Issued for coordination'/>
+      </StackPanel>
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Left'
+                  Margin='0,5,0,0'>
+        <Label Content='Status :'
+               Width='150' />
+        <ComboBox x:Name='statusBox'
+                  MinWidth='250'
+                  Background='{x:Null}'
+                  SelectedIndex='0'>
+          <ComboBoxItem Content='S1 - Suitable For Coordination' />
+          <ComboBoxItem Content='S2 - Suitable For Information' />
+          <ComboBoxItem Content='S3 - Suitable For Review and Comment' />
+          <ComboBoxItem Content='S4 - Suitable For Stage Approval' />
+          <ComboBoxItem Content='S6 - Suitable For PIM Authorization' />
+          <ComboBoxItem Content='S7 - Suitable For AIM Authorization' />
+          <ComboBoxItem Content='A1 - Authorized and Accepted' />
+          <ComboBoxItem Content='B1 - Partial Sign Off' />
+          <ComboBoxItem Content='CR - As Constructed Record Document' />
+        </ComboBox>
+      </StackPanel>
+      <Separator Margin='0,15,0,10' />
+      <CheckBox x:Name='chkRVTlinks'
+                Content='Remove all RVT links'
+                IsChecked='True'
+                Margin='0,5,0,0' />
+      <CheckBox x:Name='chkCADlinks'
+                IsChecked='True'
+                Margin='0,5,0,0'
+                Content='Remove all CAD links' />
+      <CheckBox x:Name='chkPDFlinks'
+                Content='Remove all PDF and image links'
+                IsChecked='True'
+                Margin='0,5,0,0' />
+      <CheckBox x:Name='chkViews'
+                Content='Remove all views and sheets'
+                IsChecked='True'
+                Margin='0,5,0,0' />
+      <CheckBox x:Name='chkCoordViews'
+                Content='Keep co-ordination views and sheets'
+                IsChecked='False'
+                Margin='0,5,0,0' />
+      <CheckBox x:Name='chkLibraryPhase'
+                IsChecked='False'
+                Margin='0,5,0,0'
+                Content='Remove all elements from Library phase' />
+      <CheckBox x:Name='chkGroups'
+                IsChecked='False'
+                Margin='0,5,0,0'
+                Content='Ungroup all model groups' />
+      <CheckBox x:Name='chkIFC'
+                Content='Export IFC'
+                IsChecked='False'
+                Margin='0,5,0,0' />
+      <CheckBox x:Name='chkNWC'
+                IsChecked='False'
+                Margin='0,5,0,0'
+                Content='Export NWC' />
+      <Separator Margin='0,10,0,0' />
+      <StackPanel Orientation='Horizontal'
+                  HorizontalAlignment='Right'
+                  Margin='0,5,0,0'>
+        <Button Name='Run'
+                Content='OK'
+                Width='70'
+                Height='20'
+                HorizontalAlignment='Right'
+                Margin='10'
+                Click='IssueModel' />
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</Window>

@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Purge Rooms UI", "Purge Rooms UI\Purge Rooms UI.csproj", "{94B82557-235C-4E37-8BF4-6DEEAACB7C30}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{287CB43C-5F65-410B-95D4-636161EF883F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94B82557-235C-4E37-8BF4-6DEEAACB7C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94B82557-235C-4E37-8BF4-6DEEAACB7C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94B82557-235C-4E37-8BF4-6DEEAACB7C30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94B82557-235C-4E37-8BF4-6DEEAACB7C30}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {93E1E296-5802-43B1-9B62-B94C7FF9B039}
+	EndGlobalSection
+EndGlobal

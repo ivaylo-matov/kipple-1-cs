@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>Kipple+</Name>
+		<Assembly>Purge Rooms UI.dll</Assembly>
+		<ClientId>F9927F9D-7B0A-4A39-A4EE-8650A2D159AD</ClientId>
+		<FullClassName>Purge_Rooms_UI.App</FullClassName>
+		<Text>PurgeElements</Text>
+		<VendorId>Ivo Petrov</VendorId>
+		<VisibilityMode>AlwaysVisible</VisibilityMode>
+	</AddIn>
+</RevitAddIns>
