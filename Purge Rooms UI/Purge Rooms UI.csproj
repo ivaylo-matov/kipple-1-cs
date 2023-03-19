@@ -37,6 +37,18 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="CommonServiceLocator, Version=2.0.2.0, Culture=neutral, PublicKeyToken=489b6accfaf20ef0, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommonServiceLocator.2.0.2\lib\net47\CommonServiceLocator.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight, Version=5.4.1.0, Culture=neutral, PublicKeyToken=e7570ab207bcb616, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\GalaSoft.MvvmLight.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Extras, Version=5.4.1.0, Culture=neutral, PublicKeyToken=669f0b5e8f868abf, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\GalaSoft.MvvmLight.Extras.dll</HintPath>
+    </Reference>
+    <Reference Include="GalaSoft.MvvmLight.Platform, Version=5.4.1.0, Culture=neutral, PublicKeyToken=5f873c45e98af8a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="RevitAPI, Version=22.0.0.0, Culture=neutral, processorArchitecture=AMD64">
@@ -54,6 +66,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\MvvmLightLibs.5.4.1.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -70,90 +85,99 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
-    <Compile Include="ArchiveModel\ArchiveModelCommand.cs" />
+    <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeCommand.cs" />
+    <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml.cs">
+      <DependentUpon>IsolateWarningsByTypeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="IssueTools\ArchiveModel\ArchiveModelCommand.cs" />
     <Compile Include="CheckFamilyNaming\CheckFamilyNaming.cs" />
     <Compile Include="FailurePrerocessor.cs" />
     <Compile Include="FailurePreprocessor_Event.cs" />
-    <Compile Include="IssueModel\IssueModelCommand.cs" />
-    <Compile Include="IssueModel\IssueModelView.xaml.cs">
+    <Compile Include="WarningTools\IsolateAllWarnings\IsolateAllWarningsCommand.cs" />
+    <Compile Include="IssueTools\IssueModel\IssueModelCommand.cs" />
+    <Compile Include="IssueTools\IssueModel\IssueModelView.xaml.cs">
       <DependentUpon>IssueModelView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeAreas\PurgeAreasCommand.cs" />
-    <Compile Include="PurgeAreas\PurgeAreasView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeAreas\PurgeAreasCommand.cs" />
+    <Compile Include="PurgeTools\PurgeAreas\PurgeAreasView.xaml.cs">
       <DependentUpon>PurgeAreasView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeCADImports\PurgeCADImportsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeCADImports\PurgeCADImportsView.xaml.cs">
       <DependentUpon>PurgeCADImportsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeCADImports\PurgeCADImportsCommand.cs" />
-    <Compile Include="PurgeCADLinePatterns\PurgeCADLinePatternsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeCADImports\PurgeCADImportsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeCADLinePatterns\PurgeCADLinePatternsView.xaml.cs">
       <DependentUpon>PurgeCADLinePatternsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeCADLinePatterns\PurgeCADLinePatternsCommand.cs" />
-    <Compile Include="PurgeFillPatterns\PurgeFillPatternsCommand.cs" />
-    <Compile Include="PurgeFillPatterns\PurgeFillPatternsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeCADLinePatterns\PurgeCADLinePatternsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeFillPatterns\PurgeFillPatternsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeFillPatterns\PurgeFillPatternsView.xaml.cs">
       <DependentUpon>PurgeFillPatternsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeRooms\PurgeRoomsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeRooms\PurgeRoomsCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PurgeRooms\PurgeRoomsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeRooms\PurgeRoomsView.xaml.cs">
       <DependentUpon>PurgeRoomsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeSheets\PurgeSheetsCommand.cs" />
-    <Compile Include="PurgeSheets\PurgeSheetsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeSheets\PurgeSheetsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeSheets\PurgeSheetsView.xaml.cs">
       <DependentUpon>PurgeSheetsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeLegendsSchedules\PurgeViewsCommand.cs" />
-    <Compile Include="PurgeLegendsSchedules\PurgeViewsView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeLegendsSchedules\PurgeViewsCommand.cs" />
+    <Compile Include="PurgeTools\PurgeLegendsSchedules\PurgeViewsView.xaml.cs">
       <DependentUpon>PurgeViewsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeViewFilters\PurgeViewFiltersCommand.cs" />
-    <Compile Include="PurgeViewFilters\PurgeViewFiltersView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeViewFilters\PurgeViewFiltersCommand.cs" />
+    <Compile Include="PurgeTools\PurgeViewFilters\PurgeViewFiltersView.xaml.cs">
       <DependentUpon>PurgeViewFiltersView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeViewTemplates\PurgeViewTemplatesView.xaml.cs">
+    <Compile Include="PurgeTools\PurgeViewTemplates\PurgeViewTemplatesView.xaml.cs">
       <DependentUpon>PurgeViewTemplatesView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeViewTemplates\PurgeViewTemplatesCommand.cs" />
+    <Compile Include="PurgeTools\PurgeViewTemplates\PurgeViewTemplatesCommand.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="IssueModel\IssueModelView.xaml">
+    <Page Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeAreas\PurgeAreasView.xaml">
+    <Page Include="IssueTools\IssueModel\IssueModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeCADImports\PurgeCADImportsView.xaml">
+    <Page Include="PurgeTools\PurgeAreas\PurgeAreasView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeCADLinePatterns\PurgeCADLinePatternsView.xaml">
+    <Page Include="PurgeTools\PurgeCADImports\PurgeCADImportsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeFillPatterns\PurgeFillPatternsView.xaml">
+    <Page Include="PurgeTools\PurgeCADLinePatterns\PurgeCADLinePatternsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeRooms\PurgeRoomsView.xaml">
+    <Page Include="PurgeTools\PurgeFillPatterns\PurgeFillPatternsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeSheets\PurgeSheetsView.xaml">
+    <Page Include="PurgeTools\PurgeRooms\PurgeRoomsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeLegendsSchedules\PurgeViewsView.xaml">
+    <Page Include="PurgeTools\PurgeSheets\PurgeSheetsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeViewFilters\PurgeViewFiltersView.xaml">
+    <Page Include="PurgeTools\PurgeLegendsSchedules\PurgeViewsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PurgeViewTemplates\PurgeViewTemplatesView.xaml">
+    <Page Include="PurgeTools\PurgeViewFilters\PurgeViewFiltersView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PurgeTools\PurgeViewTemplates\PurgeViewTemplatesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -167,7 +191,9 @@
   <ItemGroup>
     <Resource Include="Resources\Purge.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Resources\Warning.png" />
+  </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Check.png" />
   </ItemGroup>

@@ -7,17 +7,34 @@ using System.Linq;
 using System.Collections.Generic;
 using View = Autodesk.Revit.DB.View;
 using Autodesk.Revit.ApplicationServices;
-
+using System.Reflection;
+using System.Windows.Media.Imaging;
 
 namespace Purge_Rooms_UI
 {
     [Transaction(TransactionMode.Manual)]
     public class IssueModelCommand : IExternalCommand
     {
+        public static void CreateButton(RibbonPanel panel)
+        {
+            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
+
+            PushButtonData buttonData = new PushButtonData(
+                MethodBase.GetCurrentMethod().DeclaringType?.Name,
+                "Issue" + System.Environment.NewLine + "Model",
+                thisAssemblyPath,
+                MethodBase.GetCurrentMethod().DeclaringType?.FullName
+                );
+            buttonData.ToolTip = "Prepare the model for issue." + System.Environment.NewLine + 
+                "Please make sure all users have synced before funning the tool." + System.Environment.NewLine + 
+                "This tool works on workshared cloud models. The clean model will be saved in the project's 01 WIP - Internal Work folder.";
+            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Issue.png"));
+
+            panel.AddItem(buttonData);
+        }
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            UIApplication uiapp = commandData.Application;
-            Application app = uiapp.Application;
+            Application app = commandData.Application.Application;
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
 
@@ -29,6 +46,7 @@ namespace Purge_Rooms_UI
                 if (CheckForCoordViews(doc) == true || CheckForCoordSheets(doc) == true)
                 {
                     window.chkCoordViews.IsChecked = true;
+                    window.chkViews.IsChecked = false;
                 }
                 if (CheckForLibraryPhase(doc) == true)
                 {
@@ -246,12 +264,10 @@ namespace Purge_Rooms_UI
         }
         public static List<ElementId> DeleteNonCoordViews(Document doc)
         {
-            List<View> allViews = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Views).WhereElementIsNotElementType().
-                Where(v => v.Name != "IFC Export").Where(v => v.Name != "Navisworks").
-                Cast<View>().ToList();
-            List<View> viewsToProcess = new List<View>();
             List<ElementId> viewIdsToDelete = new List<ElementId>();
-            foreach (View view in allViews)
+
+            List<ViewPlan> allViewPlans = new FilteredElementCollector(doc).OfClass(typeof(ViewPlan)).WhereElementIsNotElementType().Cast<ViewPlan>().ToList();
+            foreach (ViewPlan view in allViewPlans)
             {
                 if (!view.LookupParameter("View Folder 1 (View type)").HasValue)
                 {
@@ -264,22 +280,82 @@ namespace Purge_Rooms_UI
                         viewIdsToDelete.Add(view.Id);
                     }
                 }
-                List<View> allSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<View>().ToList();
-                foreach (View sch in allSchedules)
+            }
+            List<ViewSection> allViewSec = new FilteredElementCollector(doc).OfClass(typeof(ViewSection)).WhereElementIsNotElementType().Cast<ViewSection>().ToList();
+            foreach (ViewSection view in allViewSec)
+            {
+                if (!view.LookupParameter("View Folder 1 (View type)").HasValue)
                 {
-                    if (!sch.LookupParameter("View Folder 1 (View type)").HasValue)
+                    viewIdsToDelete.Add(view.Id);
+                }
+                else
+                {
+                    if (!view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
                     {
-                        viewIdsToDelete.Add(sch.Id);
-                    }
-                    else
-                    {
-                        if (!sch.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-                        {
-                            viewIdsToDelete.Add(sch.Id);
-                        }
+                        viewIdsToDelete.Add(view.Id);
                     }
                 }
-            }    
+            }
+            List<View3D> all3D = new FilteredElementCollector(doc).OfClass(typeof(View3D)).WhereElementIsNotElementType().Cast<View3D>().ToList();
+            foreach (View3D view in all3D)
+            {
+                if (!view.LookupParameter("View Folder 1 (View type)").HasValue)
+                {
+                    viewIdsToDelete.Add(view.Id);
+                }
+                else
+                {
+                    if (!view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+                    {
+                        viewIdsToDelete.Add(view.Id);
+                    }
+                }
+            }
+            List<ViewDrafting> allViewDraft = new FilteredElementCollector(doc).OfClass(typeof(ViewDrafting)).WhereElementIsNotElementType().Cast<ViewDrafting>().ToList();
+            foreach (ViewDrafting view in allViewDraft)
+            {
+                if (!view.LookupParameter("View Folder 1 (View type)").HasValue)
+                {
+                    viewIdsToDelete.Add(view.Id);
+                }
+                else
+                {
+                    if (!view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+                    {
+                        viewIdsToDelete.Add(view.Id);
+                    }
+                }
+            }
+            List<TableView> allTableView = new FilteredElementCollector(doc).OfClass(typeof(TableView)).WhereElementIsNotElementType().Cast<TableView>().ToList();
+            foreach (TableView view in allTableView)
+            {
+                if (!view.LookupParameter("View Folder 1 (View type)").HasValue)
+                {
+                    viewIdsToDelete.Add(view.Id);
+                }
+                else
+                {
+                    if (!view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+                    {
+                        viewIdsToDelete.Add(view.Id);
+                    }
+                }
+            }
+            List<View> allLegends = new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>().Where(v => v.ViewType == ViewType.Legend).ToList();
+            foreach (var leg in allLegends)
+            {
+                if (!leg.LookupParameter("View Folder 1 (View type)").HasValue)
+                {
+                    viewIdsToDelete.Add(leg.Id);
+                }
+                else
+                {
+                    if (!leg.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+                    {
+                        viewIdsToDelete.Add(leg.Id);
+                    }
+                }
+            }
             return viewIdsToDelete;
         }
         public static string UngroupAllGroups(Document doc)
@@ -435,7 +511,7 @@ namespace Purge_Rooms_UI
                     rulesToExecute.Add(r);
                 }
             }
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 IList<FailureMessage> failMessages = perfAd.ExecuteRules(doc, rulesToExecute);
                 if (failMessages.Count() == 0) return;

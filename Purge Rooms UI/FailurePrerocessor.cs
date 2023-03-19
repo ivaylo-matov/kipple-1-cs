@@ -25,17 +25,13 @@ namespace Purge_Rooms_UI
                     if (fSeverity == FailureSeverity.Warning)
                     {
                         fAccessor.DeleteWarning(failMessage);
-                        return FailureProcessingResult.ProceedWithCommit;
                     }
                     else
                     {
                         fAccessor.ResolveFailure(failMessage);
-                        return FailureProcessingResult.ProceedWithCommit;
                     }
                 }
                 return FailureProcessingResult.ProceedWithCommit;
-
-                Console.WriteLine("something");
             }
         }
     }

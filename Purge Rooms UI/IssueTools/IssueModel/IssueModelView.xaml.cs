@@ -7,6 +7,8 @@ using System.Windows;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Autodesk.Revit.DB.Events;
+using Autodesk.Revit.ApplicationServices;
+using Application = Autodesk.Revit.ApplicationServices.Application;
 
 namespace Purge_Rooms_UI
 {
@@ -15,16 +17,22 @@ namespace Purge_Rooms_UI
         public UIDocument uidoc { get; }
         public Document doc { get; }
         public UIApplication uiapp { get; }
+        public Application app { get; }
+ 
         public IssueModelView(UIDocument UiDoc)
         {
             uidoc = UiDoc;
             doc = UiDoc.Document;
-            
+                        
             InitializeComponent();
             Title = "Issue Model";
         }
         private void IssueModel(object sender, RoutedEventArgs e)
         {   
+            FailurePreprocessor_Event failurePreprocessor = new FailurePreprocessor_Event();
+
+            // SUBSCRIBE TO THE EVENT HANDLER HERE ??? 
+
             using (Transaction updateMetadata = new Transaction(doc, "Update splash"))
             {
 
@@ -65,10 +73,10 @@ namespace Purge_Rooms_UI
             using (Transaction cleanModel = new Transaction(doc, "Clean Model"))
             {
                 //// failure handling options
-                FailureHandlingOptions failtOpt = cleanModel.GetFailureHandlingOptions();
-                FailurePrerocessor prerocessor = new FailurePrerocessor();
-                failtOpt.SetFailuresPreprocessor(prerocessor);
-                cleanModel.SetFailureHandlingOptions(failtOpt);
+                //FailureHandlingOptions failtOpt = cleanModel.GetFailureHandlingOptions();
+                //FailurePrerocessor prerocessor = new FailurePrerocessor();
+                //failtOpt.SetFailuresPreprocessor(prerocessor);
+                //cleanModel.SetFailureHandlingOptions(failtOpt);
 
                 // start transaction
                 cleanModel.Start();            
