@@ -47,7 +47,7 @@ namespace Purge_Rooms_UI
             // button for ARCHIVE & ISSUE
             IssueModelCommand.CreateButton(issuePanel);
             ArchiveModelCommand.CreateButton(issuePanel);
-            IsolateWarningsByTypeCommand.CreateButton(issuePanel);
+            //IsolateWarningsByTypeCommand.CreateButton(issuePanel);
 
 
             //// create the push buttons below CHECK
@@ -63,20 +63,20 @@ namespace Purge_Rooms_UI
 
 
 
-            // JUST A TEST
-            PushButtonData allWarnData = new PushButtonData("cmdNWC", "Isolate All", thisAssemblyPath, "Purge_Rooms_UI.IsolateAllWarningsCommand");
-            allWarnData.ToolTip = "Isolate all elements visible in the active view that have warnings associated to them";
-            allWarnData.LargeImage = warningIcon;
-            PushButtonData typeWarnData = new PushButtonData("warnByType", "Isolate" + System.Environment.NewLine + "By Type", thisAssemblyPath, "Purge_Rooms_UI.IsolateWarningsByTypeCommand");
-            typeWarnData.ToolTip = "Isolate all elements visible in the active view that associated to a selected warning type.";
-            typeWarnData.LargeImage = warningIcon;
+            ////// JUST A TEST
+            //PushButtonData allWarnData = new PushButtonData("cmdNWC", "Isolate All", thisAssemblyPath, "Purge_Rooms_UI.IsolateAllWarningsCommand");
+            //allWarnData.ToolTip = "Isolate all elements visible in the active view that have warnings associated to them";
+            //allWarnData.LargeImage = warningIcon;
+            ////PushButtonData typeWarnData = new PushButtonData("warnByType", "Isolate" + System.Environment.NewLine + "By Type", thisAssemblyPath, "Purge_Rooms_UI.IsolateWarningsByTypeCommand");
+            ////typeWarnData.ToolTip = "Isolate all elements visible in the active view that associated to a selected warning type.";
+            ////typeWarnData.LargeImage = warningIcon;
 
 
             // create the split bttons - WARNING
             SplitButtonData sb3Data = new SplitButtonData("warningDropdown", "Warning Tools");
             SplitButton sbWarning = auditPanel.AddItem(sb3Data) as SplitButton;
-            sbWarning.AddPushButton(allWarnData);
-            sbWarning.AddPushButton(typeWarnData);
+            IsolateAllWarningsCommand.CreateButton(sbWarning);
+            IsolateWarningsByTypeCommand.CreateButton(sbWarning);
 
         }
         public Result OnShutdown(UIControlledApplication application)
@@ -92,5 +92,10 @@ namespace Purge_Rooms_UI
             AddRibbonPanel(application);
             return Result.Succeeded;
         }
+        //public static Result Warnirngs(UIControlledApplication application)
+        //{
+        //    application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
+        //    return Result.Succeeded;
+        //}
     }
 }

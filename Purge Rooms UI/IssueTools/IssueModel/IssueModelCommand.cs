@@ -9,6 +9,7 @@ using View = Autodesk.Revit.DB.View;
 using Autodesk.Revit.ApplicationServices;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using Autodesk.Revit.DB.Events;
 
 namespace Purge_Rooms_UI
 {
@@ -38,6 +39,10 @@ namespace Purge_Rooms_UI
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
 
+            //ControlledApplication controlApp = commandData.Application.ControlledApplication;
+            //controlApp.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(failurePreprocessorEvent.ProcessFailuresEvents);
+
+
             try
             {
                 IssueModelView window = new IssueModelView(uidoc);
@@ -61,7 +66,7 @@ namespace Purge_Rooms_UI
                 return Result.Failed;
             }
         }
-        public static string SyncCloudModel(Document doc)
+        public static void SyncCloudModel(Document doc)
         {
             TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
             RelinquishOptions rOpt = new RelinquishOptions(true);
@@ -76,11 +81,8 @@ namespace Purge_Rooms_UI
             syncOpt.SaveLocalBefore = true;
             syncOpt.SaveLocalAfter = true;
             doc.SynchronizeWithCentral(tOpt, syncOpt);
-
-            string result = "Document Synced";
-            return result;
         }
-        public static string SaveIssueModel(Document doc)
+        public static void SaveIssueModel(Document doc)
         {
             var prjInfo = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
             string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
@@ -117,11 +119,8 @@ namespace Purge_Rooms_UI
             syncOpt.SaveLocalBefore = false;
             syncOpt.SaveLocalAfter = false;
             doc.SynchronizeWithCentral(tOpt, syncOpt);
-
-            string result = "Document Saved";
-            return result;
         }
-        public static string RemoveRVTLins(Document doc)
+        public static void RemoveRVTLinks(Document doc)
         {
             var linkedRVT = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkType)).ToList();
             foreach (RevitLinkType link in linkedRVT)
@@ -132,10 +131,8 @@ namespace Purge_Rooms_UI
                 }
                 catch { }
             }
-            string result = "RVT links removed.";
-            return result;
         }
-        public static string RemoveCADLins(Document doc)
+        public static void RemoveCADLinks(Document doc)
         {
             var linkedCAD = new FilteredElementCollector(doc).OfClass(typeof(ImportInstance)).ToList();
             foreach (ImportInstance link in linkedCAD)
@@ -146,10 +143,8 @@ namespace Purge_Rooms_UI
                 }
                 catch { }
             }
-            string result = "CAD links removed.";
-            return result;
         }
-        public static string RemovePDFLins(Document doc)
+        public static void RemovePDFLinks(Document doc)
         {
             var linkedPDF = new FilteredElementCollector(doc).OfClass(typeof(ImageType)).ToList();
             foreach (ImageType link in linkedPDF)
@@ -160,8 +155,6 @@ namespace Purge_Rooms_UI
                 }
                 catch { }
             }
-            string result = "PDF & Image links removed.";
-            return result;
         }
         public static List<ElementId> DeleteAllSheets(Document doc)
         {
@@ -358,10 +351,24 @@ namespace Purge_Rooms_UI
             }
             return viewIdsToDelete;
         }
-        public static string UngroupAllGroups(Document doc)
+        public static void UngroupAllGroups(Document doc)
         {
-            var allGroups = new FilteredElementCollector(doc).OfClass(typeof(Group)).Cast<Group>().ToList();
-            foreach (Group group in allGroups)
+            var nonNestedGroups = new FilteredElementCollector(doc).OfClass(typeof(Group)).Cast<Group>().ToList();
+            // delete host (not nested) groups first
+            foreach (Group group in nonNestedGroups)
+            {
+                try
+                {
+                    if (group.AttachedParentId == null)
+                    {
+                        group.UngroupMembers();
+                    }
+                }
+                catch { }
+            }
+
+            var nestedGroups = new FilteredElementCollector(doc).OfClass(typeof(Group)).Cast<Group>().ToList();
+            foreach (Group group in nestedGroups)
             {
                 try
                 {
@@ -369,9 +376,6 @@ namespace Purge_Rooms_UI
                 }
                 catch { }
             }
-
-            string result = "All groups ungrouped.";
-            return result;
         }
         public static bool CheckForLibraryPhase(Document doc)
         {
@@ -387,7 +391,7 @@ namespace Purge_Rooms_UI
             }
             return result;
         }
-        public static string DeleteLibraryElements(Document doc)
+        public static void DeleteLibraryElements(Document doc)
         {
             ElementId libPhaseId = null;
             ElementId exPhaseId = null;
@@ -405,8 +409,38 @@ namespace Purge_Rooms_UI
             }
             if (libPhaseId != null)
             {
-                var allElements = new FilteredElementCollector(doc).WhereElementIsNotElementType().Where(e => e.get_Parameter(BuiltInParameter.PHASE_CREATED) != null).Where(e => e.get_Parameter(BuiltInParameter.PHASE_DEMOLISHED) != null).ToList();
-                List<ElementId> libIds = new List<ElementId>();
+                // delete the groups first
+                var allGroups = new FilteredElementCollector(doc)
+                    .OfClass(typeof(Group))
+                    .WhereElementIsNotElementType()
+                    .Where(e => e.get_Parameter(BuiltInParameter.PHASE_CREATED) != null)
+                    .Where(e => e.get_Parameter(BuiltInParameter.PHASE_DEMOLISHED) != null)
+                    .ToList();
+
+                List<ElementId> libGrIdsToDelete = new List<ElementId>();
+                foreach (var el in allGroups)
+                {
+                    if (el.get_Parameter(BuiltInParameter.PHASE_CREATED).AsValueString().Contains("Library") && el.get_Parameter(BuiltInParameter.PHASE_DEMOLISHED).AsValueString().Contains("Existing"))
+                    {
+                        libGrIdsToDelete.Add(el.Id);
+                    }
+                }
+                foreach (ElementId id in libGrIdsToDelete)
+                {
+                    try
+                    {
+                        doc.Delete(id);
+                    }
+                    catch { }
+                }
+
+                // delete element that are not in groups
+                var allElements = new FilteredElementCollector(doc)
+                    .WhereElementIsNotElementType()
+                    .Where(e => e.get_Parameter(BuiltInParameter.PHASE_CREATED) != null)
+                    .Where(e => e.get_Parameter(BuiltInParameter.PHASE_DEMOLISHED) != null)
+                    .ToList();
+
                 List<ElementId> libIdsToDelete = new List<ElementId>();
                 foreach (var el in allElements)
                 {
@@ -424,11 +458,8 @@ namespace Purge_Rooms_UI
                     catch { }
                 }
             }
-
-            string result = "All library elements were deleted.";
-            return result;
         }
-        public static string ExportIFC(Document doc)
+        public static void ExportIFC(Document doc)
         {
             var prjInfo = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
             string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
@@ -466,11 +497,8 @@ namespace Purge_Rooms_UI
             ifcOpt.AddOption("ExportUserDefinedPsets", "false");
             ifcOpt.AddOption("SitePlacement", "0");
             doc.Export(dirPath, fileName, ifcOpt);
-
-            string result = "IFC file was exported.";
-            return result;
         }
-        public static string ExportNWC(Document doc)
+        public static void ExportNWC(Document doc)
         {
             var prjInfo = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
             string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
@@ -495,9 +523,6 @@ namespace Purge_Rooms_UI
                 doc.Export(dirPath, fileName, nwcOpt);
             }
             catch{ }
-
-            string result = "NWC file was exported.";
-            return result;
         }
         public static void PurgeModel(Document doc)
         {
@@ -570,6 +595,16 @@ namespace Purge_Rooms_UI
             catch { }
                        
             return userInitials;
+        }
+        public static void SusspendWarnings(UIControlledApplication application)
+        {
+            // call our method that will load up our toolbar
+            application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
+        }
+        public static void UnsusspendWarnings(UIControlledApplication application)
+        {
+            // call our method that will load up our toolbar
+            application.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
         }
     }
 }

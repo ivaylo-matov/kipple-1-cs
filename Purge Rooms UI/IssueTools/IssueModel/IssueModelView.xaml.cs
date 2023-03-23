@@ -18,26 +18,27 @@ namespace Purge_Rooms_UI
         public Document doc { get; }
         public UIApplication uiapp { get; }
         public Application app { get; }
+        public UIControlledApplication _uiContrApp { get; }
  
         public IssueModelView(UIDocument UiDoc)
         {
             uidoc = UiDoc;
             doc = UiDoc.Document;
-                        
+
             InitializeComponent();
             Title = "Issue Model";
         }
         private void IssueModel(object sender, RoutedEventArgs e)
-        {   
-            FailurePreprocessor_Event failurePreprocessor = new FailurePreprocessor_Event();
+        {
+            // SUBSCRIBE TO THE EVENT HANDLER HERE ???
+            //_uiContrApp.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
+            //App.Warnirngs(_uiContrApp);
 
-            // SUBSCRIBE TO THE EVENT HANDLER HERE ??? 
+            
+
 
             using (Transaction updateMetadata = new Transaction(doc, "Update splash"))
             {
-
-
-
                 updateMetadata.Start();
                 // colect values
                 string issuedTo = issuedToBox.Text;
@@ -68,30 +69,32 @@ namespace Purge_Rooms_UI
                 updateMetadata.Commit();
             }
 ;
-            string sync = IssueModelCommand.SyncCloudModel(doc);
+            IssueModelCommand.SyncCloudModel(doc);
 
             using (Transaction cleanModel = new Transaction(doc, "Clean Model"))
             {
                 //// failure handling options
-                //FailureHandlingOptions failtOpt = cleanModel.GetFailureHandlingOptions();
-                //FailurePrerocessor prerocessor = new FailurePrerocessor();
-                //failtOpt.SetFailuresPreprocessor(prerocessor);
-                //cleanModel.SetFailureHandlingOptions(failtOpt);
+                FailureHandlingOptions failtOpt = cleanModel.GetFailureHandlingOptions();
+                FailurePrerocessor prerocessor = new FailurePrerocessor();
+                failtOpt.SetFailuresPreprocessor(prerocessor);
+                cleanModel.SetFailureHandlingOptions(failtOpt);
 
                 // start transaction
-                cleanModel.Start();            
+                cleanModel.Start();
+
+                //IssueModelCommand.PurgeModel(doc);
 
                 if (chkRVTlinks.IsChecked == true)
                 {
-                    string removeRVT = IssueModelCommand.RemoveRVTLins(doc);
+                    IssueModelCommand.RemoveRVTLinks(doc);
                 }
                 if (chkCADlinks.IsChecked == true)
                 {
-                    string removeCAD = IssueModelCommand.RemoveCADLins(doc);
+                    IssueModelCommand.RemoveCADLinks(doc);
                 }
                 if (chkPDFlinks.IsChecked == true)
                 {
-                    string removeImage = IssueModelCommand.RemovePDFLins(doc);
+                    IssueModelCommand.RemovePDFLinks(doc);
                 }
                 if (chkCoordViews.IsChecked == true)
                 {
@@ -137,15 +140,15 @@ namespace Purge_Rooms_UI
                 }
                 if (chkGroups.IsChecked == true)
                 {
-                    string removeGroups = IssueModelCommand.UngroupAllGroups(doc);
+                    IssueModelCommand.UngroupAllGroups(doc);
                 }
                 if (chkLibraryPhase.IsChecked == true)
                 {
-                    string removeLibrary = IssueModelCommand.DeleteLibraryElements(doc);
+                    IssueModelCommand.DeleteLibraryElements(doc);
                 }
                 if (chkIFC.IsChecked == true)
                 {
-                    string exportIFC = IssueModelCommand.ExportIFC(doc);
+                    IssueModelCommand.ExportIFC(doc);
                 }
 
                 IssueModelCommand.PurgeModel(doc);
@@ -156,10 +159,12 @@ namespace Purge_Rooms_UI
             }
             if (chkNWC.IsChecked == true)
             {
-                string exportNWC = IssueModelCommand.ExportNWC(doc);
+                IssueModelCommand.ExportNWC(doc);
             }
 
-            string save = IssueModelCommand.SaveIssueModel(doc);
+            IssueModelCommand.SaveIssueModel(doc);
+
+            //_uiContrApp.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
         }
 
 

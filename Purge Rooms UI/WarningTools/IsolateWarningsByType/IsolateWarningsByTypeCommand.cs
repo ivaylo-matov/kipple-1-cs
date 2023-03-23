@@ -12,20 +12,20 @@ namespace Purge_Rooms_UI
     [Transaction(TransactionMode.Manual)]
     public class IsolateWarningsByTypeCommand : IExternalCommand
     {
-        public static void CreateButton(RibbonPanel panel)
+        public static void CreateButton(SplitButton splButton)
         {
             string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
 
             PushButtonData buttonData = new PushButtonData(
                 MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                "Test Warnings",
+                "Isolate" + System.Environment.NewLine + "By Type",
                 thisAssemblyPath,
                 MethodBase.GetCurrentMethod().DeclaringType?.FullName
                 );
-            buttonData.ToolTip = "Isolate Warnings Test.";
-            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Issue.png"));
+            buttonData.ToolTip = "Isolate all elements visible in the active view that associated to a selected warning type.";
+            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Warning.png"));
 
-            panel.AddItem(buttonData);
+            splButton.AddPushButton(buttonData);
         }
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
