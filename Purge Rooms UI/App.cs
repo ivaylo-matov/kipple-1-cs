@@ -1,5 +1,4 @@
-﻿using Autodesk.Revit.DB.Events;
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.UI;
 using System;
 using System.Reflection;
 using System.Windows.Media.Imaging;
@@ -8,11 +7,16 @@ namespace Purge_Rooms_UI
 {
     class App : IExternalApplication
     {
+
+        public static UIControlledApplication Instance { get; private set; }
+
         // define a method that will create our tab and button
         static void AddRibbonPanel(UIControlledApplication application)
         {
+            Instance = application;
+
             string tabName = "Kipple";
- 
+
             // create PANELS
             application.CreateRibbonTab(tabName);
             var auditPanel = application.CreateRibbonPanel(tabName, "Audit");
