@@ -31,11 +31,7 @@ namespace Purge_Rooms_UI
         private void IssueModel(object sender, RoutedEventArgs e)
         {
             // SUBSCRIBE TO THE EVENT HANDLER HERE ???
-            //_uiContrApp.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
-            //App.Warnirngs(_uiContrApp);
-
-            
-
+            _uiContrApp.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
 
             using (Transaction updateMetadata = new Transaction(doc, "Update splash"))
             {
@@ -164,10 +160,7 @@ namespace Purge_Rooms_UI
 
             IssueModelCommand.SaveIssueModel(doc);
 
-            //_uiContrApp.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
+            _uiContrApp.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
         }
-
-
-
     }
 }
