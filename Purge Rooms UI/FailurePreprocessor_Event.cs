@@ -11,51 +11,17 @@ namespace Purge_Rooms_UI
 {
     public class FailurePreprocessor_Event
     {
-        public static void ProcessFailures_Events(object sender, FailuresProcessingEventArgs e)
+        public static void ProcessFailuresEvents(object sender, FailuresProcessingEventArgs args)
         {
-            FailuresAccessor fas = e.GetFailuresAccessor();
-            List<FailureMessageAccessor> fma = fas.GetFailureMessages().ToList();
-            List<ElementId> del = new List<ElementId>();
-            int errors = 0;
-            foreach (FailureMessageAccessor fa in fma)
+            FailuresAccessor fAccessor = args.GetFailuresAccessor();
+            List<FailureMessageAccessor> fMessages = fAccessor.GetFailureMessages().ToList();
+            foreach (FailureMessageAccessor fMessage in fMessages)
             {
                 try
                 {
-                    if (fa.GetSeverity() == FailureSeverity.Error)
-                    {
-                        if (fas.IsFailureResolutionPermitted(fa, FailureResolutionType.DeleteElements))
-                        {
-                            fa.SetCurrentResolutionType(FailureResolutionType.DeleteElements);
-                            fas.ResolveFailure(fa);
-                            errors++;
-                            continue;
-                        }
-                    }
-                    else if (fa.GetSeverity() == FailureSeverity.Warning)
-                    {
-                        foreach (ElementId f in fa.GetAdditionalElementIds())
-                        {
-                            if (!del.Contains(f))
-                            {
-                                del.Add(f);
-                            }
-                        }
-                        fas.DeleteWarning(fa);
-                        if (del.Count > 0)
-                        {
-                            fas.DeleteElements(del);
-                        }
-                    }
+                    fAccessor.DeleteWarning(fMessage);
                 }
-                catch (Exception ex)
-                {
-                    TaskDialog.Show("Failure Accessor", ex.Message + "\n" + ex.ToString());
-                    continue;
-                }
-            }
-            if (errors > 0)
-            {
-                e.SetProcessingResult(FailureProcessingResult.ProceedWithCommit);
+                catch { }
             }
         }
     }

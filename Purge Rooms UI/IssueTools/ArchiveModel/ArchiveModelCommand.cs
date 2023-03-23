@@ -6,13 +6,31 @@ using Autodesk.Revit.ApplicationServices;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Reflection;
+using System.Windows.Media.Imaging;
 
 namespace Purge_Rooms_UI
 {
     [Transaction(TransactionMode.Manual)]
     public class ArchiveModelCommand : IExternalCommand
     {
-        
+        public static void CreateButton(RibbonPanel panel)
+        {
+            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
+
+            PushButtonData buttonData = new PushButtonData(
+                MethodBase.GetCurrentMethod().DeclaringType?.Name,
+                "Archive" + System.Environment.NewLine + "Model",
+                thisAssemblyPath,
+                MethodBase.GetCurrentMethod().DeclaringType?.FullName
+                );
+            buttonData.ToolTip = "Archive the model." + System.Environment.NewLine + "Please sync the model before running the tool. " +
+                "This tool works on workshared cloud models. " +
+                "All Project Information parameter must be filled in correctly.";
+            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Archive.png"));
+
+            panel.AddItem(buttonData);
+        }
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
