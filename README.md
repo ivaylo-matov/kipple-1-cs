@@ -5,32 +5,14 @@
 Kipple is a collection of C# code that automates various tasks in Revit. Each tool helps architects work in efficient and consistent manner. Please note that this toolset is designed specially for ACG Architects.
 
 ## Some of apps included
- - [x] [Install all required components](#install-all-required-components)
- - [x] [How to use the tools](#how-to-use-the-tools)
- - [x] [Getting involved](#getting-involved)
- - [x] [Acknowledgements](#acknowledgements)
-
-## Install all required components
-
-- [x] Ensure Revit is properly installed
-- [x] Open Dynamo from the Manage tab in Revit
-- [x] Edit Preferences to :
-  - load definition from R:\3600_IT\3605_BIM\3605_17_Dynamo\02-Definitions
-  - set default Python engine to IronPython2
-- [x] Install latest version of Orkestra Browser
-  - can be downloaded from http:/orkestra.online
-- [x] Paste all packages from R:\3600_IT\3605_BIM\3605_17_Dynamo\03-Packages\x.xx to
-   C:\Users\user.name\AppData\Roaming\Dynamo\Dynamo Revit\x.xx\packages
-- [x] Open Orkestra Browser from the Manage tab in Revit
-- [x] Go to Settings
-- [x] Add path to R:\3600_IT\3605_BIM\3605_17_Dynamo\01-Scripts\_Orkestra Scripts
-- [x] Restart Revit
-- [x] Et voila!
-
-![image](https://github.com/ivaylo-matov/acg-tools-dyn/assets/48355182/b6ae68af-4622-4a18-bb86-f64db6c0b846)
+ - [x] Issue Revit Model
+ - [x] Archive Revit Model
+ - [x] Check Naming Conventions
+ - [x] Isolate Warnings
+ - [x] Resolve Warnings
+ - [x] Deep Clean 
 
 ## How to use the tools
-
 - [x] just use the tools :wink:
 
 ## Acknowledgements
