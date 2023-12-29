@@ -31,13 +31,7 @@ Kipple is a collection of C# code that automates various tasks in Revit. Each to
 
 ## How to use the tools
 
-- [x] just use the tools
-
-<img src="https://github.com/ivaylo-matov/acg-tools-dyn/assets/48355182/6b11e297-7655-4eb0-b502-b5868e022553" alt="ACG Tools Dyn" width="400"/>
-
-## Getting involved
-
-If you have idea for a new script, additional feature of existing script or want to learn more about Dynamo, Python and automations, please feel free to speak with Ivo.
+- [x] just use the tools :wink:
 
 ## Acknowledgements
 
