@@ -2,7 +2,7 @@
 
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/ivaylo-matov/acg-tools-dyn?color=yellow&label=release&style=for-the-badge)  ![GitHub repo file count](https://img.shields.io/github/directory-file-count/ivaylo-matov/acg-tools-dyn?color=red&style=for-the-badge)  ![GitHub repo size](https://img.shields.io/github/repo-size/ivaylo-matov/acg-tools-dyn?label=SIZE&style=for-the-badge)
 
-ACG Tools is a collection of 81 Dynamo & Python scripts that automates various tasks in Revit. Each tool helps architects work in efficient and consistent manner. Please note that this toolset is designed specially for ACG Architects. To load the tools as buttons in a Revit 2024 you must install Orkestra Browser and have access to the ACG's custom definitions or the ACG Tools package.
+Kipple is a collection of C# code that automates various tasks in Revit. Each tool helps architects work in efficient and consistent manner. Please note that this toolset is designed specially for ACG Architects.
 
 ## Table of Contents
  - [x] [Install all required components](#install-all-required-components)
