@@ -39,10 +39,6 @@ namespace Purge_Rooms_UI
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            //ControlledApplication controlApp = commandData.Application.ControlledApplication;
-            //controlApp.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(failurePreprocessorEvent.ProcessFailuresEvents);
-
-
             try
             {
                 IssueModelView window = new IssueModelView(uidoc);
