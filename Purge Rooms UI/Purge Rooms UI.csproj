@@ -93,6 +93,11 @@
     </Compile>
     <Compile Include="DeleteSheets\DeleteSheetsViewModel.cs" />
     <Compile Include="DeleteSheets\SheetObjectWrapper.cs" />
+    <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamCommand.cs" />
+    <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamModel.cs" />
+    <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml.cs">
+      <DependentUpon>PlaceFaceBasedFamView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeCommand.cs" />
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml.cs">
       <DependentUpon>IsolateWarningsByTypeView.xaml</DependentUpon>
@@ -146,6 +151,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="DeleteSheets\DeleteSheetsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
