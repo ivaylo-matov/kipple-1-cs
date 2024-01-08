@@ -1,8 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.UI;
 
 namespace Purge_Rooms_UI.DeleteSheets
 {
@@ -22,6 +23,7 @@ namespace Purge_Rooms_UI.DeleteSheets
             var sheetObjects = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ViewSheet))
                 .Cast<ViewSheet>()
+                .OrderBy(v => v.SheetNumber)
                 .Select(v => new SheetObjectWrapper(v));
 
             return new ObservableCollection<SheetObjectWrapper>(sheetObjects);
@@ -37,6 +39,5 @@ namespace Purge_Rooms_UI.DeleteSheets
                 trans.Commit();
             }
         }
-
     }
 }

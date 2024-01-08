@@ -8,23 +8,32 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
 namespace Purge_Rooms_UI.DeleteSheets
 {
     [Transaction(TransactionMode.Manual)]
-    internal class DeleteSheetsCommand : IExternalCommand
-
-    {     
-        
-
+    public class DeleteSheetsCommand : IExternalCommand
+    {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            Application app = commandData.Application.Application;
-            UIDocument uiDoc = commandData.Application.ActiveUIDocument;
-            Document doc = uiDoc.Document;
+            try
+            {
+                var uiApp = commandData.Application;
+                var m = new DeleteSheetsModel(uiApp);
+                var vm = new DeleteSheetsViewModel(m);
+                var v = new DeleteSheetsView()
+                {
+                    DataContext = vm
+                };
 
-            return Result.Succeeded;
+                v.ShowDialog();
+
+                return Result.Succeeded;
+            }
+            catch (Exception ex) { return Result.Failed; }     
         }
 
         public static void CreateButton(RibbonPanel panel)
