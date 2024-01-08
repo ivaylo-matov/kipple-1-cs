@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.UI;
 using Purge_Rooms_UI.DeleteSheets;
+using Purge_Rooms_UI.PlaceFaceBasedFam;
 
 namespace Purge_Rooms_UI
 {
@@ -35,6 +36,7 @@ namespace Purge_Rooms_UI
             IssueModelCommand.CreateButton(issuePanel);
             ArchiveModelCommand.CreateButton(issuePanel);
             DeleteSheetsCommand.CreateButton(issuePanel);
+            PlaceFaceBasedFamCommand.CreateButton(issuePanel);
 
             // create the split buttons - WARNING
             SplitButtonData sb3Data = new SplitButtonData("warningDropdown", "Warning Tools");
