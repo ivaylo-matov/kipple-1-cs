@@ -4,17 +4,20 @@ using Autodesk.Revit.UI;
 using System;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using System.Collections.Generic;
 
-namespace Purge_Rooms_UI.PlaceFaceBasedFam
+namespace Purge_Rooms_UI.Bimorph
 {
     [Transaction(TransactionMode.Manual)]
-    public class PlaceFaceBasedFamCommand : IExternalCommand
+    internal class BimorphCommand : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            UIApplication uiApp = commandData.Application;
             UIDocument uiDoc = commandData.Application.ActiveUIDocument;
+            Document doc = uiDoc.Document;
 
-            PlaceFaceBasedFamView placeFaceBasedFam = new PlaceFaceBasedFamView(uiDoc);
+            BimorphView placeFaceBasedFam = new BimorphView(uiDoc);
             placeFaceBasedFam.Show();
 
             return Result.Succeeded;
@@ -30,7 +33,7 @@ namespace Purge_Rooms_UI.PlaceFaceBasedFam
 
             PushButtonData buttonData = new PushButtonData(
                 MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                "Place" + System.Environment.NewLine + "Family Work",
+                "Bimorph",
                 thisAssemblyPath,
                 MethodBase.GetCurrentMethod().DeclaringType?.FullName
                 );
@@ -41,3 +44,4 @@ namespace Purge_Rooms_UI.PlaceFaceBasedFam
         }
     }
 }
+

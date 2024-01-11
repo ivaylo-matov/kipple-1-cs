@@ -1,39 +1,42 @@
-﻿using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Purge_Rooms_UI.PlaceFaceBasedFam;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
-namespace Purge_Rooms_UI.DeleteSheets
+namespace Purge_Rooms_UI.PlaceFamily
 {
     [Transaction(TransactionMode.Manual)]
-    public class DeleteSheetsCommand : IExternalCommand
+    [Regeneration(RegenerationOption.Manual)]
+    [Journaling(JournalingMode.NoCommandData)]
+    public class PlaceFamilyCommand : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
             {
-                var uiApp = commandData.Application;
-                var m = new DeleteSheetsModel(uiApp);
-                var vm = new DeleteSheetsViewModel(m);
-                var v = new DeleteSheetsView
+                UIDocument uiDoc = commandData.Application.ActiveUIDocument;
+                PlaceFamilyModel model = new PlaceFamilyModel
                 {
-                    DataContext = vm
+                    UiDoc = uiDoc
                 };
 
-                v.ShowDialog();
+                PlaceFamilyViewModel viewModel = new PlaceFamilyViewModel(model);
+                PlaceFamilyView view = new PlaceFamilyView(model);
+                view.ShowDialog();
 
                 return Result.Succeeded;
             }
-            catch (Exception ex) { return Result.Failed; }     
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Error", $"Error: {ex.Message}");
+                return Result.Failed;
+            }
         }
 
         public static void CreateButton(RibbonPanel panel)
@@ -42,11 +45,12 @@ namespace Purge_Rooms_UI.DeleteSheets
 
             PushButtonData buttonData = new PushButtonData(
                 MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                "Delete" + System.Environment.NewLine + "Sheets",
+                "Place" + Environment.NewLine + "Family",
                 thisAssemblyPath,
                 MethodBase.GetCurrentMethod().DeclaringType?.FullName
                 );
-            buttonData.ToolTip = "Coming soon...";
+
+            buttonData.ToolTip = "Place Family on Wall Face";
             buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Issue.png"));
 
             panel.AddItem(buttonData);

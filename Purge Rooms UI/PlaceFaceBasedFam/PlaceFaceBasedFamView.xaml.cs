@@ -4,23 +4,19 @@ using System;
 using System.Linq;
 using System.Windows;
 using Autodesk.Revit.UI.Selection;
-using static Purge_Rooms_UI.PlaceFaceBasedFam.PlaceFaceBasedFamCommand;
 
 namespace Purge_Rooms_UI.PlaceFaceBasedFam
 {
-    /// <summary>
-    /// Interaction logic for UserControl1.xaml
-    /// </summary>
     public partial class PlaceFaceBasedFamView : Window
     {
-        public UIDocument uidoc { get; }
+        public UIDocument uiDoc { get; }
         public Document doc { get; }
 
         private ExternalEvent externalEvent;
 
         public PlaceFaceBasedFamView(UIDocument UiDoc)
         {
-            uidoc = UiDoc;
+            uiDoc = UiDoc;
             doc = UiDoc.Document;
 
             InitializeComponent();
@@ -30,15 +26,8 @@ namespace Purge_Rooms_UI.PlaceFaceBasedFam
 
         private void SelectAndPlaceFamily(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                // Trigger the external event
-                externalEvent.Raise();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            try { externalEvent.Raise(); }
+            catch (Exception ex) { TaskDialog.Show("Error", $"Error: {ex.Message}"); }
         }
 
         private class PlaceFamilyExternalEventHandler : IExternalEventHandler
@@ -50,35 +39,20 @@ namespace Purge_Rooms_UI.PlaceFaceBasedFam
 
                 try
                 {
-                    Reference pickedRef = uidoc.Selection.PickObject(ObjectType.Element, "Select a wall");
-                    Element wall = doc.GetElement(pickedRef.ElementId);
+                    Reference pickedRef = uidoc.Selection.PickObject(ObjectType.Face, "Select a face");
+                    ElementId wallId = pickedRef.ElementId;
+                    Element wall = doc.GetElement(wallId);
 
                     if (wall != null && wall is Wall)
                     {
                         Options options = new Options();
                         options.ComputeReferences = true;
 
-                        GeometryElement geometryElement = wall.get_Geometry(options);
-
-                        foreach (GeometryObject geometryObject in geometryElement)
-                        {
-                            if (geometryObject is Solid solid)
-                            {
-                                foreach (Face wallFace in solid.Faces)
-                                {
-                                    // You may want to add additional checks to ensure you are selecting the desired face
-                                    // For example, check face normal or other properties
-                                    PlaceFamilyInstanceOnWall(doc, wallFace);
-                                    break;
-                                }
-                            }
-                        }
+                        Face wallFace = wall.GetGeometryObjectFromReference(pickedRef) as Face;
+                        if (wallFace != null) PlaceFamilyInstanceOnFace(doc, wallFace, pickedRef);
                     }
                 }
-                catch (Exception ex)
-                {
-                    TaskDialog.Show("Error", $"Error: {ex.Message}");
-                }
+                catch (Exception ex) { TaskDialog.Show("Error", $"Error: {ex.Message}"); }
             }
 
             public string GetName()
@@ -86,32 +60,39 @@ namespace Purge_Rooms_UI.PlaceFaceBasedFam
                 return "PlaceFamilyExternalEventHandler";
             }
 
-            private void PlaceFamilyInstanceOnWall(Document doc, Face wallFace)
+            /// <summary>
+            /// Places instance of a given symbol on a face
+            /// </summary>
+            /// <param name="doc"></param>
+            /// <param name="face"></param>
+            private void PlaceFamilyInstanceOnFace(Document doc, Face face, Reference faceRef)
             {
-                // Get the family type
-                FamilySymbol symbol = GetFamilyType(doc);
-
                 // Get the center of the wallFace
-                BoundingBoxUV boundingBox = wallFace.GetBoundingBox();
+                BoundingBoxUV boundingBox = face.GetBoundingBox();
                 UV center = (boundingBox.Max + boundingBox.Min) * 0.5;
-                XYZ location = wallFace.Evaluate(center);
+                XYZ location = face.Evaluate(center);
 
                 // Get the direction of the wallFace
-                XYZ normal = wallFace.ComputeNormal(center);
-                XYZ refDir = normal.CrossProduct(XYZ.BasisZ);
+                XYZ refDir = face.ComputeNormal(center).CrossProduct(XYZ.BasisZ);
 
                 // Place the family instance
                 using (Transaction transaction = new Transaction(doc, "Place Family Instance"))
                 {
                     transaction.Start();
-                    FamilyInstance instance = doc.Create.NewFamilyInstance(wallFace, location, refDir, symbol);
+                    if (doc.GetElement(faceRef) != null)
+                    {
+                        doc.Create.NewFamilyInstance(faceRef, location, refDir, GetSymbol(doc));
+                    }                    
                     transaction.Commit();
                 }
-
-                TaskDialog.Show("Selected Wall Face", $"Placed family instance on Wall {doc.GetElement(wallFace.Reference).Name}");
             }
 
-            private FamilySymbol GetFamilyType(Document doc)
+            /// <summary>
+            /// Get the first face based symbol in the model
+            /// </summary>
+            /// <param name="doc"></param>
+            /// <returns></returns>
+            private FamilySymbol GetSymbol(Document doc)
             {
                 return new FilteredElementCollector(doc)
                     .OfClass(typeof(FamilySymbol))
