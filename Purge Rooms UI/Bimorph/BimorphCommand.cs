@@ -13,14 +13,19 @@ namespace Purge_Rooms_UI.Bimorph
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            UIApplication uiApp = commandData.Application;
-            UIDocument uiDoc = commandData.Application.ActiveUIDocument;
-            Document doc = uiDoc.Document;
+            try
+            {
+                UIApplication uiApp = commandData.Application;
 
-            BimorphView placeFaceBasedFam = new BimorphView(uiDoc);
-            placeFaceBasedFam.Show();
+                var m = new BimorphModel(uiApp);
+                var vm = new BimorphViewModel(m);
+                var v = new BimorphView { DataContext = vm };
 
-            return Result.Succeeded;
+                v.ShowDialog();
+
+                return Result.Succeeded;
+            }
+            catch (Exception ex) { return Result.Failed; }            
         }
 
         /// <summary>

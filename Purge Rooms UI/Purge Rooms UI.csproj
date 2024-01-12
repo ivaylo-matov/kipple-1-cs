@@ -65,6 +65,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -86,10 +89,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
+    <Compile Include="Bimorph\BimorphModel.cs" />
     <Compile Include="Bimorph\BimorphView.xaml.cs">
       <DependentUpon>BimorphView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Bimorph\BimorphCommand.cs" />
+    <Compile Include="Bimorph\BimorphViewModel.cs" />
     <Compile Include="DeleteSheets\DeleteSheetsCommand.cs" />
     <Compile Include="DeleteSheets\DeleteSheetsModel.cs" />
     <Compile Include="DeleteSheets\DeleteSheetsView.xaml.cs">
@@ -109,6 +114,8 @@
     </Compile>
     <Compile Include="PlaceFamily\PlaceFamilyViewModel.cs" />
     <Compile Include="PlaceFamily\RelayCommand.cs" />
+    <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeCommand.cs" />
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml.cs">
       <DependentUpon>IsolateWarningsByTypeView.xaml</DependentUpon>
