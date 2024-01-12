@@ -12,21 +12,6 @@ namespace Purge_Rooms_UI
     [Transaction(TransactionMode.Manual)]
     internal class PurgeSheetsCommand : IExternalCommand
     {
-        public static void CreateButton(SplitButton splButton)
-        {
-            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-
-            PushButtonData buttonData = new PushButtonData(
-                MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                "Purge Sheets",
-                thisAssemblyPath,
-                MethodBase.GetCurrentMethod().DeclaringType?.FullName
-                );
-            buttonData.ToolTip = "Purge all unused sheets in the models. Those are sheets that do not contain viewports or are not assigned any revisions.";
-            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Purge.png"));
-
-            splButton.AddPushButton(buttonData);
-        }
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIDocument uidoc = commandData.Application.ActiveUIDocument;
@@ -56,6 +41,22 @@ namespace Purge_Rooms_UI
                 message = ex.Message;
                 return Result.Failed;            
             }  
+        }
+
+        public static void CreateButton(SplitButton splButton)
+        {
+            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
+
+            PushButtonData buttonData = new PushButtonData(
+                MethodBase.GetCurrentMethod().DeclaringType?.Name,
+                "Purge Sheets",
+                thisAssemblyPath,
+                MethodBase.GetCurrentMethod().DeclaringType?.FullName
+                );
+            buttonData.ToolTip = "Purge all unused sheets in the models. Those are sheets that do not contain viewports or are not assigned any revisions.";
+            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Purge.png"));
+
+            splButton.AddPushButton(buttonData);
         }
     }
 }

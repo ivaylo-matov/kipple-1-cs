@@ -27,7 +27,7 @@ namespace Purge_Rooms_UI
             int countDeleted = 0;
             if (chkPurgeSheets.IsChecked == true)
             {
-                using (Transaction t = new Transaction(doc, "Purge Unused Shees"))
+                using (Transaction t = new Transaction(doc, "Purge Unused Sheets"))
                 {
                     t.Start();
                     var unusedSheetsIds = new List<ElementId>();

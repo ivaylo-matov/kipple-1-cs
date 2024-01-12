@@ -1,14 +1,14 @@
-﻿using Autodesk.Revit.DB.Events;
-using Autodesk.Revit.UI;
-using System;
-using System.Reflection;
-using System.Windows.Media.Imaging;
+﻿using Autodesk.Revit.UI;
+using Purge_Rooms_UI.DeleteSheets;
+using Purge_Rooms_UI.PlaceFaceBasedFam;
+using Purge_Rooms_UI.PlaceFamily;
+using Purge_Rooms_UI.Bimorph;
 
 namespace Purge_Rooms_UI
 {
     class App : IExternalApplication
     {
-        // define a method that will create our tab and button
+        // define a method that will create tab, panel and buttons
         static void AddRibbonPanel(UIControlledApplication application)
         {
             string tabName = "Kipple";
@@ -18,17 +18,7 @@ namespace Purge_Rooms_UI
             var auditPanel = application.CreateRibbonPanel(tabName, "Audit");
             var issuePanel = application.CreateRibbonPanel(tabName, "Issue");
 
-            // Get dll assembly path
-            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-
-            // create IMAGES for the buttons
-            BitmapImage purgeIcon = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Purge.png"));
-            BitmapImage checkIcon = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Check.png"));
-            BitmapImage archiveIcon = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Archive.png"));
-            BitmapImage issueIcon = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Issue.png"));
-            BitmapImage warningIcon = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Warning.png"));
-
-            // create the split bttons - PURGE
+            // create the split buttons - PURGE
             SplitButtonData sb1Data = new SplitButtonData("purgeDropdown", "Purge Tools");
             SplitButton sbPurge = auditPanel.AddItem(sb1Data) as SplitButton;
             PurgeCADImportsCommand.CreateButton(sbPurge);
@@ -39,7 +29,7 @@ namespace Purge_Rooms_UI
             PurgeFillPatternsCommand.CreateButton(sbPurge);
             PurgeCADLinePatternsCommand.CreateButton(sbPurge);
             sbPurge.AddSeparator();
-            PurgeSheetsCommand.CreateButton(sbPurge);
+            //PurgeSheetsCommand.CreateButton(sbPurge);
             PurgeViewsCommand.CreateButton(sbPurge);
             PurgeViewTemplatesCommand.CreateButton(sbPurge);
             PurgeViewFiltersCommand.CreateButton(sbPurge);
@@ -47,32 +37,11 @@ namespace Purge_Rooms_UI
             // button for ARCHIVE & ISSUE
             IssueModelCommand.CreateButton(issuePanel);
             ArchiveModelCommand.CreateButton(issuePanel);
-            //IsolateWarningsByTypeCommand.CreateButton(issuePanel);
+            DeleteSheetsCommand.CreateButton(issuePanel);
+            BimorphCommand.CreateButton(issuePanel);
+            PlaceFamilyCommand.CreateButton(issuePanel);
 
-
-            //// create the push buttons below CHECK
-            //PushButtonData check1Data = new PushButtonData("cmdCheckFams", "Check Family" + System.Environment.NewLine + "Naming", thisAssemblyPath,"Purge_Rooms_UI.CheckFamilyNaming");
-            //check1Data.ToolTip = "Check for any familien not named in copliance with the ACG protocols.";
-            //check1Data.LargeImage = checkIcon;
-
-            //// create the split bttons - CHECK
-            //SplitButtonData sb2Data = new SplitButtonData("checkDropdown", "Check Tools");
-            //SplitButton sbCheck = auditPanel.AddItem(sb2Data) as SplitButton;
-            //sbCheck.AddPushButton(check1Data);
-
-
-
-
-            ////// JUST A TEST
-            //PushButtonData allWarnData = new PushButtonData("cmdNWC", "Isolate All", thisAssemblyPath, "Purge_Rooms_UI.IsolateAllWarningsCommand");
-            //allWarnData.ToolTip = "Isolate all elements visible in the active view that have warnings associated to them";
-            //allWarnData.LargeImage = warningIcon;
-            ////PushButtonData typeWarnData = new PushButtonData("warnByType", "Isolate" + System.Environment.NewLine + "By Type", thisAssemblyPath, "Purge_Rooms_UI.IsolateWarningsByTypeCommand");
-            ////typeWarnData.ToolTip = "Isolate all elements visible in the active view that associated to a selected warning type.";
-            ////typeWarnData.LargeImage = warningIcon;
-
-
-            // create the split bttons - WARNING
+            // create the split buttons - WARNING
             SplitButtonData sb3Data = new SplitButtonData("warningDropdown", "Warning Tools");
             SplitButton sbWarning = auditPanel.AddItem(sb3Data) as SplitButton;
             IsolateAllWarningsCommand.CreateButton(sbWarning);
@@ -86,16 +55,9 @@ namespace Purge_Rooms_UI
         }
         public Result OnStartup(UIControlledApplication application)
         {
-            // call our method that will load up our toolbar
-            //application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
-
+            // call our method that will load up our tool bar
             AddRibbonPanel(application);
             return Result.Succeeded;
         }
-        //public static Result Warnirngs(UIControlledApplication application)
-        //{
-        //    application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
-        //    return Result.Succeeded;
-        //}
     }
 }

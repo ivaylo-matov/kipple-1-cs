@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Purge_Rooms_UI</RootNamespace>
     <AssemblyName>Purge Rooms UI</AssemblyName>
-    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -85,6 +86,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
+    <Compile Include="Bimorph\BimorphView.xaml.cs">
+      <DependentUpon>BimorphView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Bimorph\BimorphCommand.cs" />
+    <Compile Include="DeleteSheets\DeleteSheetsCommand.cs" />
+    <Compile Include="DeleteSheets\DeleteSheetsModel.cs" />
+    <Compile Include="DeleteSheets\DeleteSheetsView.xaml.cs">
+      <DependentUpon>DeleteSheetsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DeleteSheets\DeleteSheetsViewModel.cs" />
+    <Compile Include="DeleteSheets\SheetObjectWrapper.cs" />
+    <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamCommand.cs" />
+    <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml.cs">
+      <DependentUpon>PlaceFaceBasedFamView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PlaceFamily\PlaceFamilyCommand.cs" />
+    <Compile Include="PlaceFamily\PlaceFamilyExternalEventHandler.cs" />
+    <Compile Include="PlaceFamily\PlaceFamilyModel.cs" />
+    <Compile Include="PlaceFamily\PlaceFamilyView.xaml.cs">
+      <DependentUpon>PlaceFamilyView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PlaceFamily\PlaceFamilyViewModel.cs" />
+    <Compile Include="PlaceFamily\RelayCommand.cs" />
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeCommand.cs" />
     <Compile Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml.cs">
       <DependentUpon>IsolateWarningsByTypeView.xaml</DependentUpon>
@@ -119,7 +143,6 @@
     <Compile Include="PurgeTools\PurgeRooms\PurgeRoomsView.xaml.cs">
       <DependentUpon>PurgeRoomsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PurgeTools\PurgeSheets\PurgeSheetsCommand.cs" />
     <Compile Include="PurgeTools\PurgeSheets\PurgeSheetsView.xaml.cs">
       <DependentUpon>PurgeSheetsView.xaml</DependentUpon>
     </Compile>
@@ -137,6 +160,22 @@
     <Compile Include="PurgeTools\PurgeViewTemplates\PurgeViewTemplatesCommand.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Bimorph\BimorphView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DeleteSheets\DeleteSheetsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PlaceFamily\PlaceFamilyView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="WarningTools\IsolateWarningsByType\IsolateWarningsByTypeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
