@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Bimorph\BimorphModel.cs" />
+    <Compile Include="Bimorph\BimorphUtil.cs" />
     <Compile Include="Bimorph\BimorphView.xaml.cs">
       <DependentUpon>BimorphView.xaml</DependentUpon>
     </Compile>

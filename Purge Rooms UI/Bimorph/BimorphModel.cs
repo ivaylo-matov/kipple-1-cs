@@ -8,6 +8,7 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using System.Collections.ObjectModel;
 using System.Windows.Controls;
+using Purge_Rooms_UI.Bimorph;
 
 namespace Purge_Rooms_UI.Bimorph
 {
@@ -109,56 +110,19 @@ namespace Purge_Rooms_UI.Bimorph
                 .First();
         }
 
-        public double MatersToFeet(double value)
-        {
-            return value / 0.3048;
-        }
-
         public Floor GetRoomBoundingFloor(List<Floor> floors, SpatialElement room)
         {
             foreach (Floor floor in floors)
             {
-                if (IsFloorRoomBounding(room, floor)) return floor; break;
+                //if (IsFloorRoomBounding(room, floor)) return floor; break;
+                if (floor.IsFloorRoomBounding(doc, room)) return floor; break;
             }
             return null;
-        }
-
-        public bool IsFloorRoomBounding(SpatialElement room, Floor floor)
-        {
-            View3D def3D = new FilteredElementCollector(doc).OfClass(typeof(View3D)).Cast<View3D>().FirstOrDefault();
-            ElementClassFilter filter = new ElementClassFilter(typeof(Floor));
-
-            LocationPoint location = room.Location as LocationPoint;
-            XYZ center = location.Point;
-
-            ReferenceIntersector refIntersector = new ReferenceIntersector(filter, FindReferenceTarget.Face, def3D);
-            ReferenceWithContext refWithContext = refIntersector.FindNearest(center, XYZ.BasisZ);
-            if (refWithContext != null)
-            {
-                Reference floorRef = refWithContext.GetReference();
-                ElementId floorId = floorRef.ElementId;
-                if (floorId.IntegerValue == floor.Id.IntegerValue) return true;
-            }
-            return false;
         }
 
         public double CalculateAngle(XYZ v1, XYZ v2)
         {
             return Math.Acos(v1.DotProduct(v2) / (v1.GetLength() * v2.GetLength())) * (180 / Math.PI);
-        }
-
-        public bool IsConcave(XYZ v1, XYZ v2)
-        {
-            XYZ crossProduct = new XYZ(
-            v1.Y * v2.Z - v1.Z * v2.Y,
-            v1.Z * v2.X - v1.X * v2.Z,
-            v1.X * v2.Y - v1.Y * v2.X);
-            return crossProduct.Normalize().Z > 0;
-        }
-
-        public bool AlmostEqualTo(double value, double target, double tolerance)
-        {
-            return Math.Abs(value - target) <= tolerance;
         }
 
         public Tuple<List<XYZ>, List<XYZ>> GetRoomCorners(SpatialElement room)
@@ -180,10 +144,10 @@ namespace Purge_Rooms_UI.Bimorph
                 XYZ nextPoint = outerSegments[n].GetCurve().GetEndPoint(1);
 
                 double angle = CalculateAngle(evaluationPoint - prevPoint, nextPoint - evaluationPoint);
-                bool concave = IsConcave(evaluationPoint - prevPoint, nextPoint - evaluationPoint);
+                bool concave = BimorphUtil.IsConcave(evaluationPoint - prevPoint, nextPoint - evaluationPoint);
 
-                if (AlmostEqualTo(angle, 90, 0.01) && concave) concaveXyz.Add(evaluationPoint);
-                else if (AlmostEqualTo(angle, 90, 0.01) && !concave) convexXyz.Add(evaluationPoint);
+                if (angle.AlmostEqualTo(90, 0.01) && concave) concaveXyz.Add(evaluationPoint);
+                else if (angle.AlmostEqualTo(90, 0.01) && !concave) convexXyz.Add(evaluationPoint);
             }
             return new Tuple<List<XYZ>, List<XYZ>>(concaveXyz, convexXyz);
         }
