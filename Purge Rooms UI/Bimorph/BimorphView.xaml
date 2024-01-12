@@ -13,7 +13,9 @@
                 VerticalAlignment="Center"
     Width='100'
     Height='20'
-    Margin='0,5,0,0' Click="DoStuff"/>
+    Margin='0,5,0,0' 
+                Command="{Binding Process, Mode=OneWay}"
+                CommandParameter="{Binding ElementName=BimorphWin}"/>
 
     </Border>
 </Window>
