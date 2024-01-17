@@ -4,7 +4,6 @@ using Autodesk.Revit.UI;
 using System;
 using System.Reflection;
 using System.Windows.Media.Imaging;
-using System.Collections.Generic;
 
 namespace Purge_Rooms_UI.Bimorph
 {
@@ -15,13 +14,13 @@ namespace Purge_Rooms_UI.Bimorph
         {
             try
             {
-                UIApplication uiApp = commandData.Application;
+                UIApplication uiApp = commandData.Application;  // get the UiApp
 
-                var m = new BimorphModel(uiApp);
-                var vm = new BimorphViewModel(m);
-                var v = new BimorphView { DataContext = vm };
+                var m = new BimorphModel(uiApp);                // create instance of model and pass it UiApp
+                var vm = new BimorphViewModel(m);               // create instance of view-model and pass it model
+                var v = new BimorphView { DataContext = vm };   // create instance of view and link it to view-model
 
-                v.ShowDialog();
+                v.ShowDialog();                                 // show the UI
 
                 return Result.Succeeded;
             }

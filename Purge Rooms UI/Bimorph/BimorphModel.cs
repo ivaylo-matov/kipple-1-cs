@@ -1,33 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
-using System.Collections.ObjectModel;
-using System.Windows.Controls;
-using Purge_Rooms_UI.Bimorph;
 
 namespace Purge_Rooms_UI.Bimorph
 {
     public class BimorphModel
     {
-        public UIApplication uiApp { get; }
-        public Document doc { get; }
-        public BimorphModel(UIApplication uiApp)
+        public UIApplication UIApp { get; }         // read-only property to hold the UiApp
+        public Document Doc { get; }                // read-only property to hold the document
+        public BimorphModel(UIApplication uiApp)    // constructor
         {            
-            doc = uiApp.ActiveUIDocument.Document;        
+            Doc = uiApp.ActiveUIDocument.Document;        
         }
 
-
-
-
-        public void MainCode()
+        public void MainCode()                      // processes below
         {
             // get all valid rooms and floors
-            List<SpatialElement> allRooms = new FilteredElementCollector(doc)
+            List<SpatialElement> allRooms = new FilteredElementCollector(Doc)
                 .OfClass(typeof(SpatialElement))
                 .WhereElementIsNotElementType()
                 .Cast<SpatialElement>()
@@ -35,12 +27,12 @@ namespace Purge_Rooms_UI.Bimorph
                 .Where(x => x.Area > 0)
             .ToList();
 
-            List<Floor> allFloors = new FilteredElementCollector(doc)
+            List<Floor> allFloors = new FilteredElementCollector(Doc)
                 .OfClass(typeof(Floor))
                 .Cast<Floor>()
                 .ToList();
 
-            using (Transaction trans = new Transaction(doc, "Place elements"))
+            using (Transaction trans = new Transaction(Doc, "Place elements"))
             {
                 trans.Start();
 
@@ -48,7 +40,10 @@ namespace Purge_Rooms_UI.Bimorph
                 foreach (SpatialElement room in allRooms)
                 {
                     List<XYZ> concaveXyz = GetRoomCorners(room).Item1;
-                    List<XYZ> convexXyz = GetRoomCorners(room).Item2;
+                    List<XYZ> concaveVs = GetRoomCorners(room).Item2;
+
+                    List<XYZ> convexXyz = GetRoomCorners(room).Item3;
+                    List<XYZ> convexVs = GetRoomCorners(room).Item4;
 
                     // get the floor data
                     Floor floor = GetRoomBoundingFloor(allFloors, room);
@@ -57,17 +52,32 @@ namespace Purge_Rooms_UI.Bimorph
                     UV locationUv = faceBb.Max + faceBb.Min * 0.5;
                     XYZ refDir = bottomFace.ComputeNormal(locationUv).CrossProduct(XYZ.BasisZ); // need this
 
-                    // get the symbol
-                    FamilySymbol symbol = GetSymbol("Bimorph");
+                    // get the symbols
+                    FamilySymbol concaveSymbol = GetSymbol("Concave");
+                    FamilySymbol convexSymbol = GetSymbol("Convex");
 
                     // set the options
                     Options opt = new Options();
                     opt.ComputeReferences = true;
 
                     // iterate through the points
-                    foreach (XYZ point in concaveXyz)
+                    if (concaveXyz.Count > 0 && concaveSymbol != null)
                     {
-                        doc.Create.NewFamilyInstance(bottomFace, point, refDir, symbol);
+                        for (int i = 0; i < concaveXyz.Count; i++)
+                        {
+                            FamilyInstance instance = Doc.Create
+                                .NewFamilyInstance(bottomFace, concaveXyz[i], concaveVs[1], concaveSymbol);
+                            instance.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).Set(0);
+                        }
+                    }
+                    if (convexXyz.Count > 0 && convexSymbol != null)
+                    {
+                        for (int i = 0; i < convexXyz.Count; i++)
+                        {
+                            FamilyInstance instance = Doc.Create
+                                .NewFamilyInstance(bottomFace, convexXyz[i], convexVs[i], convexSymbol);
+                            instance.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).Set(0);
+                        }
                     }
                 }
 
@@ -101,23 +111,27 @@ namespace Purge_Rooms_UI.Bimorph
             return bottomFace;
         }
 
-        public FamilySymbol GetSymbol(string typeName)
+        public FamilySymbol GetSymbol(string famKeyword)
         {
-            return new FilteredElementCollector(doc).
+            FamilySymbol symbol = new FilteredElementCollector(Doc).
                 OfClass(typeof(FamilySymbol))
                 .Cast<FamilySymbol>()
-                .Where(f => f.Name.Contains(typeName))
+                .Where(f => f.FamilyName.Contains(famKeyword))
                 .First();
+
+            if(!symbol.IsActive) symbol.Activate();
+            return symbol;
         }
 
         public Floor GetRoomBoundingFloor(List<Floor> floors, SpatialElement room)
         {
+            Floor boudingFloor = null;
+
             foreach (Floor floor in floors)
             {
-                //if (IsFloorRoomBounding(room, floor)) return floor; break;
-                if (floor.IsFloorRoomBounding(doc, room)) return floor; break;
+                if (floor.IsFloorRoomBounding(Doc, room)) boudingFloor = floor;
             }
-            return null;
+            return boudingFloor;
         }
 
         public double CalculateAngle(XYZ v1, XYZ v2)
@@ -125,10 +139,12 @@ namespace Purge_Rooms_UI.Bimorph
             return Math.Acos(v1.DotProduct(v2) / (v1.GetLength() * v2.GetLength())) * (180 / Math.PI);
         }
 
-        public Tuple<List<XYZ>, List<XYZ>> GetRoomCorners(SpatialElement room)
+        public Tuple<List<XYZ>, List<XYZ>, List<XYZ>, List<XYZ>> GetRoomCorners(SpatialElement room)
         {
             List<XYZ> concaveXyz = new List<XYZ>();
             List<XYZ> convexXyz = new List<XYZ>();
+            List<XYZ> concaveVs = new List<XYZ>();
+            List<XYZ> convexVs = new List<XYZ>();
 
             SpatialElementBoundaryOptions options = new SpatialElementBoundaryOptions();
             IList<BoundarySegment> outerSegments = room.GetBoundarySegments(options).First();
@@ -145,11 +161,20 @@ namespace Purge_Rooms_UI.Bimorph
 
                 double angle = CalculateAngle(evaluationPoint - prevPoint, nextPoint - evaluationPoint);
                 bool concave = BimorphUtil.IsConcave(evaluationPoint - prevPoint, nextPoint - evaluationPoint);
+                XYZ v = prevPoint - evaluationPoint;    // works for convex only
 
-                if (angle.AlmostEqualTo(90, 0.01) && concave) concaveXyz.Add(evaluationPoint);
-                else if (angle.AlmostEqualTo(90, 0.01) && !concave) convexXyz.Add(evaluationPoint);
+                if (angle.AlmostEqualTo(90, 0.01) && concave)
+                {
+                    concaveVs.Add(v);
+                    concaveXyz.Add(evaluationPoint);
+                }
+                else if (angle.AlmostEqualTo(90, 0.01) && !concave)
+                {
+                    convexVs.Add(v);
+                    convexXyz.Add(evaluationPoint);
+                }
             }
-            return new Tuple<List<XYZ>, List<XYZ>>(concaveXyz, convexXyz);
+            return new Tuple<List<XYZ>, List<XYZ>, List<XYZ>, List<XYZ>>(concaveXyz, concaveVs, convexXyz, convexVs);
         }
     }
 }
