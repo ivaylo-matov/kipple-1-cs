@@ -27,12 +27,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="100"/>
+            <RowDefinition Height="90"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="90"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Row="1" Grid.Column="0" Background="#F0F0F0"/>
         <Grid Grid.Row="1" Grid.Column="1" Background="#F0F0F0"/>
@@ -75,7 +75,7 @@
                 <Label Content='Issued to :'
                Width='150' />
                 <TextBox x:Name='issuedToBox'
-                 MinWidth='250' Text='DT'/>
+                 MinWidth='270' Text='DT'/>
             </StackPanel>
             <StackPanel Orientation='Horizontal'
                   HorizontalAlignment='Left'
@@ -83,7 +83,7 @@
                 <Label Content='Issued by :'
                Width='150' />
                 <TextBox x:Name='issuedByBox'
-                 MinWidth='250' />
+                 MinWidth='270' />
             </StackPanel>
 
             <StackPanel Orientation='Horizontal'
@@ -92,7 +92,7 @@
                 <Label Content='Approved by :'
                Width='150' />
                 <TextBox x:Name='approvedByBox'
-                 MinWidth='250' />
+                 MinWidth='270' />
             </StackPanel>
 
             <StackPanel Orientation='Horizontal'
@@ -101,7 +101,7 @@
                 <Label Content='Revision description :'
                Width='150' />
                 <TextBox x:Name='revDescribBox'
-                 MinWidth='250'
+                 MinWidth='270'
                  Text='Issued for coordination'/>
             </StackPanel>
 
@@ -111,7 +111,7 @@
                 <Label Content='Status :'
                Width='150' />
                 <ComboBox x:Name='statusBox'
-                  MinWidth='250'
+                  MinWidth='270'
                   Background='{x:Null}'
                   SelectedIndex='0'>
                     <ComboBoxItem Content='S1 - Suitable For Coordination' />
