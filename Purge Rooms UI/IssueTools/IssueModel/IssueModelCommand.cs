@@ -551,19 +551,24 @@ namespace Purge_Rooms_UI
         public static string GetProjectLeadInitials(Document doc)
         {
             string plInitials = "";
-            ProjectInfo pi = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
-            if (pi.LookupParameter("ACG_Project Lead").HasValue)
+            try
             {
-                string plName = pi.LookupParameter("ACG_Project Lead").AsString();
-                if (plName.Count() > 0 && plName.Count() <= 3)
+                ProjectInfo pi = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
+                if (pi.LookupParameter("ACG_Project Lead").HasValue)
                 {
-                    plInitials = plName;
-                }
-                else if (plName.Count() > 3)
-                {
-                    plInitials = string.Concat(plName.Where(char.IsUpper));
+                    string plName = pi.LookupParameter("ACG_Project Lead").AsString();
+                    if (plName.Count() > 0 && plName.Count() <= 3)
+                    {
+                        plInitials = plName;
+                    }
+                    else if (plName.Count() > 3)
+                    {
+                        plInitials = string.Concat(plName.Where(char.IsUpper));
+                    }
                 }
             }
+            catch (Exception ex) { }
+            
             return plInitials;
         }
         public static string GetUserInitials(Application app)

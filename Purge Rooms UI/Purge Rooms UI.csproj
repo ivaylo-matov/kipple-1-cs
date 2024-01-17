@@ -250,6 +250,9 @@
   <ItemGroup>
     <Resource Include="Resources\Issue.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\ACGLogo.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if exist "$(AppData)\Autodesk\Revit\Addins\2022" copy "$(ProjectDir)*.addin" "$(AppData)\Autodesk\Revit\Addins\2022"
