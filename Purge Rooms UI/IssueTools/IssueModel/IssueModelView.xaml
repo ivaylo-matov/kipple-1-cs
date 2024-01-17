@@ -11,6 +11,8 @@
         Width='450'
         Height='auto'>
 
+
+
     <Window.Resources>
         <ControlTemplate x:Key="ExecuteButton" TargetType="Button">
             <Border Background="Black"  
@@ -57,7 +59,7 @@
                Height="30"
                VerticalAlignment="Top"
                HorizontalAlignment="Left"
-               Margin="0,15,0,0"
+               Margin="0,10,0,0"
                Grid.Column="1"
                Grid.Row="0"/>
 
