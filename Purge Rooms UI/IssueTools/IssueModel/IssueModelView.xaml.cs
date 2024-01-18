@@ -4,10 +4,8 @@ using Autodesk.Revit.UI;
 using System;
 using System.Linq;
 using System.Windows;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using Autodesk.Revit.DB.Events;
-using Autodesk.Revit.ApplicationServices;
 using Application = Autodesk.Revit.ApplicationServices.Application;
 
 namespace Purge_Rooms_UI
@@ -26,8 +24,9 @@ namespace Purge_Rooms_UI
             doc = UiDoc.Document;
 
             InitializeComponent();
-            Title = "Issue Model";
+            Title = "Issue Model";    
         }
+
         private void IssueModel(object sender, RoutedEventArgs e)
         {
             // SUBSCRIBE TO THE EVENT HANDLER HERE ???
@@ -36,7 +35,7 @@ namespace Purge_Rooms_UI
             using (Transaction updateMetadata = new Transaction(doc, "Update splash"))
             {
                 updateMetadata.Start();
-                // colect values
+                // collect values
                 string issuedTo = issuedToBox.Text;
                 string issuedBy = issuedByBox.Text;
                 string approvedBy = approvedByBox.Text;
