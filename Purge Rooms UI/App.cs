@@ -35,7 +35,7 @@ namespace Purge_Rooms_UI
             PurgeViewFiltersCommand.CreateButton(sbPurge);
 
             // button for ARCHIVE & ISSUE
-            IssueModelCommand.CreateButton(issuePanel);
+            IssueCommand.CreateButton(issuePanel);
             ArchiveModelCommand.CreateButton(issuePanel);
             DeleteSheetsCommand.CreateButton(issuePanel);
             BimorphCommand.CreateButton(issuePanel);

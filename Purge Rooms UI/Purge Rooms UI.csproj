@@ -103,6 +103,8 @@
     </Compile>
     <Compile Include="DeleteSheets\DeleteSheetsViewModel.cs" />
     <Compile Include="DeleteSheets\SheetObjectWrapper.cs" />
+    <Compile Include="IssueTools\IssueModel\IssueModel.cs" />
+    <Compile Include="IssueTools\IssueModel\IssueViewModel.cs" />
     <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamCommand.cs" />
     <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml.cs">
       <DependentUpon>PlaceFaceBasedFamView.xaml</DependentUpon>
@@ -126,9 +128,9 @@
     <Compile Include="FailurePrerocessor.cs" />
     <Compile Include="FailurePreprocessor_Event.cs" />
     <Compile Include="WarningTools\IsolateAllWarnings\IsolateAllWarningsCommand.cs" />
-    <Compile Include="IssueTools\IssueModel\IssueModelCommand.cs" />
-    <Compile Include="IssueTools\IssueModel\IssueModelView.xaml.cs">
-      <DependentUpon>IssueModelView.xaml</DependentUpon>
+    <Compile Include="IssueTools\IssueModel\IssueCommand.cs" />
+    <Compile Include="IssueTools\IssueModel\IssueView.xaml.cs">
+      <DependentUpon>IssueView.xaml</DependentUpon>
     </Compile>
     <Compile Include="PurgeTools\PurgeAreas\PurgeAreasCommand.cs" />
     <Compile Include="PurgeTools\PurgeAreas\PurgeAreasView.xaml.cs">
@@ -188,7 +190,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="IssueTools\IssueModel\IssueModelView.xaml">
+    <Page Include="IssueTools\IssueModel\IssueView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

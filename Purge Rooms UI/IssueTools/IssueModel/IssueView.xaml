@@ -1,7 +1,10 @@
-﻿<Window x:Class="Purge_Rooms_UI.IssueModelView"
+﻿<Window x:Class="Purge_Rooms_UI.IssueView"
         x:Name='IssueModelWindow'
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:local="clr-namespace:Purge_Rooms_UI"
         WindowStartupLocation='CenterScreen'
         Title='Issue Model'
         Foreground="Black"
@@ -53,7 +56,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid Grid.Row="1" Background="#F0F0F0"/>
-
 
         <StackPanel Grid.Row="0"
                     
@@ -139,30 +141,36 @@
             <Separator Margin='0,15,0,10' />
             <CheckBox x:Name='chkRVTlinks'
                 Content='Remove all RVT links'
-                IsChecked='True'
+                IsEnabled="{Binding EnableRVT}"
+                IsChecked="{Binding EnableRVT}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkCADlinks'
-                IsChecked='True'
+                IsEnabled="{Binding EnableCAD}"
+                IsChecked="{Binding EnableCAD}"
                 Margin='0,5,0,0'
                 Content='Remove all CAD links' />
             <CheckBox x:Name='chkPDFlinks'
                 Content='Remove all PDF and image links'
-                IsChecked='True'
+                IsEnabled="{Binding EnableIMG}"
+                IsChecked="{Binding EnableIMG}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkViews'
                 Content='Remove all views and sheets'
-                IsChecked='True'
+                IsEnabled="{Binding EnableViews}"
+                IsChecked="{Binding EnableViews}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkCoordViews'
                 Content='Keep co-ordination views and sheets'
-                IsChecked='False'
+                IsChecked='True'
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkLibraryPhase'
-                IsChecked='False'
+                IsEnabled="{Binding EnableLib}"
+                IsChecked="{Binding EnableLib}"
                 Margin='0,5,0,0'
                 Content='Remove all elements from Library phase' />
             <CheckBox x:Name='chkGroups'
-                IsChecked='False'
+                IsEnabled="{Binding EnableGroups}"
+                IsChecked="{Binding EnableGroups}"
                 Margin='0,5,0,0'
                 Content='Ungroup all model groups' />
             <CheckBox x:Name='chkIFC'
@@ -183,11 +191,11 @@
                         FontSize="15"
                         VerticalAlignment="Center"
             Foreground="White"
+            Template="{StaticResource ExecuteButton}" 
             Width='410'
             HorizontalAlignment='Center'
-            Margin='10'
-            Click='IssueModel'
-            Template="{StaticResource ExecuteButton}" />
+            Margin='10'/>
+                <!-->='IssueModel'/>-->
 
             </StackPanel>
         </StackPanel>

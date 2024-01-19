@@ -1,67 +1,95 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
-using View = Autodesk.Revit.DB.View;
-using Autodesk.Revit.ApplicationServices;
-using System.Reflection;
-using System.Windows.Media.Imaging;
-using Autodesk.Revit.DB.Events;
+using System.Windows.Controls;
 
 namespace Purge_Rooms_UI
 {
-    [Transaction(TransactionMode.Manual)]
-    public class IssueModelCommand : IExternalCommand
+    public class IssueModel
     {
-        public static void CreateButton(RibbonPanel panel)
+        public UIApplication UIApp { get; }
+        public Document Doc { get; }
+        public IssueModel(UIApplication uiApp)
         {
-            string thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-
-            PushButtonData buttonData = new PushButtonData(
-                MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                "Issue" + System.Environment.NewLine + "Model",
-                thisAssemblyPath,
-                MethodBase.GetCurrentMethod().DeclaringType?.FullName
-                );
-            buttonData.ToolTip = "Prepare the model for issue." + System.Environment.NewLine + 
-                "Please make sure all users have synced before funning the tool." + System.Environment.NewLine + 
-                "This tool works on workshared cloud models. The clean model will be saved in the project's 01 WIP - Internal Work folder.";
-            buttonData.LargeImage = new BitmapImage(new Uri("pack://application:,,,/Purge Rooms UI;component/Resources/Issue.png"));
-
-            panel.AddItem(buttonData);
+            UIApp = uiApp;
+            Doc = uiApp.ActiveUIDocument.Document;
         }
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+
+        // HOLD ELEMENTS HERE
+        private static List<RevitLinkType> LogRVTLinks = new List<RevitLinkType>();
+        private static List<ImportInstance> LogCADLinks = new List<ImportInstance>();
+        private static List<ImageType> LogIMGLinks = new List<ImageType>();
+        private static List<View> LogViews = new List<View>();
+        private static List<Phase> LogLibPhase = new List<Phase>();
+        private static List<Group> LogModelGroups = new List<Group>();
+
+  
+
+        public void Run()
         {
-            Application app = commandData.Application.Application;
-            UIDocument uidoc = commandData.Application.ActiveUIDocument;
-            Document doc = uidoc.Document;
 
-            try
-            {
-                IssueModelView window = new IssueModelView(uidoc);
-                window.issuedByBox.Text = GetUserInitials(app);
-                window.approvedByBox.Text = GetProjectLeadInitials(doc);
-                if (CheckForCoordViews(doc) == true || CheckForCoordSheets(doc) == true)
-                {
-                    window.chkCoordViews.IsChecked = true;
-                    window.chkViews.IsChecked = false;
-                }
-                if (CheckForLibraryPhase(doc) == true)
-                {
-                    window.chkLibraryPhase.IsChecked = true;
-                }
-                window.ShowDialog();
-                return Result.Succeeded;
-            }
-            catch (Exception e)
-            {
-                message = e.Message;
-                return Result.Failed;
-            }
         }
+        // Pre-process elements
+        public bool EnableRVTLinks()
+        {
+            LogRVTLinks = new FilteredElementCollector(Doc)
+                .OfClass(typeof(RevitLinkType))
+                .Cast<RevitLinkType>()
+                .ToList();
+            return LogRVTLinks.Count > 0;
+        }
+        public bool EnableCADLinks()
+        {
+            LogCADLinks = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ImportInstance))
+                .Cast<ImportInstance>()
+                .ToList();
+            return LogCADLinks.Count > 0;
+        }
+        public bool EnableIMGLinks()
+        {
+            LogIMGLinks = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ImageType))
+                .Cast<ImageType>()
+                .ToList();
+            return LogIMGLinks.Count > 0;
+        }
+        public bool EnableViews()
+        {
+            LogViews = new FilteredElementCollector(Doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v => v.Id != Doc.ActiveView.Id)
+                .ToList();
+            return LogViews.Count > 0;
+        }
+        public bool EnableLibPhase()
+        {
+            LogLibPhase = new FilteredElementCollector(Doc)
+                .OfClass(typeof(Phase))
+                .Cast<Phase>()
+                .Where(p => p.Name.Contains("Library"))
+                .ToList();
+            return LogLibPhase.Count > 0;
+        }
+        public bool EnableGroups()
+        {
+            LogModelGroups = new FilteredElementCollector(Doc)
+                .OfClass(typeof(Group))
+                .Cast<Group>()
+            .ToList();
+            return LogModelGroups.Count > 0;
+        }
+
+
+  
+
+
+
         public static void SyncCloudModel(Document doc)
         {
             TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
@@ -518,7 +546,7 @@ namespace Purge_Rooms_UI
 
                 doc.Export(dirPath, fileName, nwcOpt);
             }
-            catch{ }
+            catch { }
         }
         public static void PurgeModel(Document doc)
         {
@@ -568,35 +596,35 @@ namespace Purge_Rooms_UI
                 }
             }
             catch (Exception ex) { }
-            
+
             return plInitials;
         }
-        public static string GetUserInitials(Application app)
-        {
-            string userInitials = "";
-            try
-            {
-                if (app.Username.StartsWith("ross.boyter"))
-                {
-                    userInitials = "RDB";
-                }
-                else if (app.Username.StartsWith("jp.v"))
-                {
-                    userInitials = "JPV";
-                    
-                }
-                else
-                {
+        //public static string GetUserInitials(Application app)
+        //{
+        //    string userInitials = "";
+        //    try
+        //    {
+        //        if (app.Username.StartsWith("ross.boyter"))
+        //        {
+        //            userInitials = "RDB";
+        //        }
+        //        else if (app.Username.StartsWith("jp.v"))
+        //        {
+        //            userInitials = "JPV";
 
-                    char first = app.Username.Split('.')[0][0];
-                    char second = app.Username.Split('.')[1][0];
-                    userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
-                }
-            }
-            catch { }
-                       
-            return userInitials;
-        }
+        //        }
+        //        else
+        //        {
+
+        //            char first = app.Username.Split('.')[0][0];
+        //            char second = app.Username.Split('.')[1][0];
+        //            userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
+        //        }
+        //    }
+        //    catch { }
+
+        //    return userInitials;
+        //}
         public static void SusspendWarnings(UIControlledApplication application)
         {
             // call our method that will load up our toolbar
