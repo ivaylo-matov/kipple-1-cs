@@ -105,6 +105,9 @@
     <Compile Include="DeleteSheets\SheetObjectWrapper.cs" />
     <Compile Include="IssueTools\IssueModel\IssueModel.cs" />
     <Compile Include="IssueTools\IssueModel\IssueViewModel.cs" />
+    <Compile Include="IssueTools\IssueModel\UserControls\IssueMetadataTextBox.xaml.cs">
+      <DependentUpon>IssueMetadataTextBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamCommand.cs" />
     <Compile Include="PlaceFaceBasedFam\PlaceFaceBasedFamView.xaml.cs">
       <DependentUpon>PlaceFaceBasedFamView.xaml</DependentUpon>
@@ -175,6 +178,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DeleteSheets\DeleteSheetsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="IssueTools\IssueModel\UserControls\IssueMetadataTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

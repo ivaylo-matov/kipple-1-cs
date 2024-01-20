@@ -280,10 +280,33 @@ namespace Purge_Rooms_UI
             }
         }
 
+        public void UpdateMetaData(string revDescription, string issuedBy, string issuedTo, string approvedBy)
+        {
+            using (Transaction tMeta = new Transaction(Doc, "Update metadata"))
+            {
+                tMeta.Start();
 
+                Revision newRev = Revision.Create(Doc);
+                newRev.Description = revDescription;
+                newRev.IssuedBy = issuedBy;
+                newRev.IssuedTo = issuedTo;
+                newRev.RevisionDate = DateTime.Now.ToString("dd.MM.yy");
 
+                try
+                {
+                    ViewSheet splashScr = Doc.ActiveView as ViewSheet;
+                    ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+                    currentRevs.Add(newRev.Id);
+                    splashScr.SetAdditionalRevisionIds(currentRevs);
+                    splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).Set(approvedBy);
+                    splashScr.get_Parameter(BuiltInParameter.SHEET_DRAWN_BY).Set(issuedBy);
+                    splashScr.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE).Set(DateTime.Now.ToString("dd.MM.yy"));
+                }
+                catch { }
 
-
+                tMeta.Commit();
+            }
+        }
         public void SyncCloudModel()
         {
             TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
@@ -307,8 +330,7 @@ namespace Purge_Rooms_UI
                 .Cast<ProjectInfo>()
                 .FirstOrDefault();
             string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
-            DateTime today = DateTime.Today;
-            string date = today.ToString("yyMMdd");
+            string date = DateTime.Now.ToString("yyMMdd");
             string dirPath = $"{prjDir}\\01 WIP - Internal Work\\{date}";
             string fileName = Doc.Title.Split('_')[0];
             string filePath = dirPath + "\\" + fileName + ".rvt";

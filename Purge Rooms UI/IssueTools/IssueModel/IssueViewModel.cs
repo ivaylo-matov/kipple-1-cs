@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Autodesk.Revit.DB;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 
@@ -104,6 +105,39 @@ namespace Purge_Rooms_UI
             set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups); }
         }
 
+        // Meta-data labels
+        private string _inputText;
+        public string InputText
+        {
+            get { return _inputText; }
+            set { _inputText = value; RaisePropertyChanged(() => InputText); }
+        }
+
+        private string _issuedTo;
+        public string IssuedTo
+        {
+            get { return _issuedTo; }
+            set { _issuedTo = value; RaisePropertyChanged(() => IssuedTo); }
+        }
+        private string _issuedBy;
+        public string IssuedBy
+        {
+            get { return _issuedBy; }
+            set { _issuedBy = value; RaisePropertyChanged(() => IssuedBy); }
+        }
+        private string _approvedBy;
+        public string ApprovedBy
+        {
+            get { return _approvedBy; }
+            set { _approvedBy = value; RaisePropertyChanged(() => ApprovedBy); }
+        }
+        private string _revDescription;
+        public string RevDescription
+        {
+            get { return _revDescription; }
+            set { _revDescription = value; RaisePropertyChanged(() => RevDescription); }
+        }
+
 
 
 
@@ -122,6 +156,10 @@ namespace Purge_Rooms_UI
         }
         private void OnExecuteRun(Window win)
         {
+            Model.UpdateMetaData(RevDescription, IssuedBy, IssuedTo, ApprovedBy);
+            Model.SyncCloudModel();
+            Model.SaveIssueModel();
+
             if (IsCheckedRVT) Model.RemoveRVTLinks();
             if (IsCheckedCAD) Model.RemoveCADLinks();
             if (IsCheckedIMG) Model.RemoveIMGLinks();

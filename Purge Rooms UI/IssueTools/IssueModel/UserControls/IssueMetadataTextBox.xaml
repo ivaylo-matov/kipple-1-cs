@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="Purge_Rooms_UI.IssueTools.IssueModel.UserControls.IssueMetadataTextBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Purge_Rooms_UI.IssueTools.IssueModel.UserControls"
+             mc:Ignorable="d" 
+             FontFamily="Calibri" FontWeight="Light" FontSize="14"
+             d:DesignHeight="40" d:DesignWidth="450">
+    <Grid>
+        <StackPanel Orientation='Horizontal' HorizontalAlignment='Left'>
+            <Label Content='{Binding LabelText}' Width='150' VerticalAlignment="Center"/>
+            <TextBox Text='{Binding InputText, Mode=TwoWay}' Width="270" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25" Margin="0,2.5,0,2.5"/>
+            <!--<TextBox Text='{Binding InputText, Mode=TwoWay, RelativeSource={RelativeSource AncestorType=UserControl}}' Width="270" VerticalAlignment="Center" VerticalContentAlignment="Center" Height="25" Margin="0,2.5,0,2.5"/>-->
+        </StackPanel>
+    </Grid>
+</UserControl>
