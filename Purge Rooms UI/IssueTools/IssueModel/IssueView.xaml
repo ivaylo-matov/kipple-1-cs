@@ -11,8 +11,9 @@
         FontFamily="Calibri"
         FontSize="14"
         FontWeight="Light"
-        Width='450'
-        Height='auto'>
+        Width='460'
+        Height='560'
+        ResizeMode="NoResize">
 
 
 
@@ -53,12 +54,18 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="90"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
-        <Grid Grid.Row="1" Background="#F0F0F0"/>
 
-        <StackPanel Grid.Row="0"
-                    
+        <Grid Grid.Row="0"/>
+        <Grid Grid.Row="1" Background="#F0F0F0"/>
+        <Grid Grid.Row="2" Background="#F0F0F0"/>
+        <Grid Grid.Row="3" Background="#F0F0F0"/>
+
+<!--Header-->
+        <StackPanel Grid.Row="0"                    
             Orientation='Vertical'
             HorizontalAlignment='Left'
             Background="White"                  
@@ -68,65 +75,42 @@
                 FontWeight="Bold"
                 FontFamily="Calibri"/>
             <Label Content='Remove content from the model before releasing to stakeholders.'
-               FontFamily="Calibri"
-                   FontSize="12"
-                 Foreground="DarkGray"/>
-
+                FontFamily="Calibri"
+                FontSize="12"
+                Foreground="DarkGray"/>
         </StackPanel>
-
-
-
-        <StackPanel Grid.Row="1"
-                Margin="10,0,10,0">
-
-            <Separator Margin='0,0,0,10'/>
-
-            <StackPanel Orientation='Horizontal'
-                  HorizontalAlignment='Left'
-                  Margin='0,5,0,0'>
-                <Label Content='Issued to :'
-               Width='150' />
-                <TextBox x:Name='issuedToBox'
-                 Text='DT'
-                 Width="270"/>
+        
+<!--Issue Data-->
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="10,0,10,0">
+            
+            <Separator Margin='10,0,10,10'/>
+            
+            <StackPanel Orientation='Horizontal' HorizontalAlignment='Left'>
+                <Label Content='Issued to' Width='150' />
+                <TextBox x:Name='issuedToBox' Text='DT' Width="270"/>
             </StackPanel>
-            <StackPanel Orientation='Horizontal'
-                  HorizontalAlignment='Left'
-                  Margin='0,5,0,0'>
-                <Label Content='Issued by :'
-               Width='150' />
-                <TextBox x:Name='issuedByBox'
-                 Width="270" />
+            
+            <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
+                <Label Content='Issued by :' Width='150' />
+                <TextBox x:Name='issuedByBox' Width="270" />
+            </StackPanel>
+
+            <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
+                <Label Content='Approved by :' Width='150' />
+                <TextBox x:Name='approvedByBox' Width="270"/>
+
             </StackPanel>
 
             <StackPanel Orientation='Horizontal'
                   HorizontalAlignment='Left'
                   Margin='0,5,0,0'>
-                <Label Content='Approved by :'
-               Width='150' />
-                <TextBox x:Name='approvedByBox'
-                 Width="270"/>
+                <Label Content='Revision description :' Width='150' />
+                <TextBox x:Name='revDescribBox' Width="270" Text='Issued for coordination'/>
             </StackPanel>
 
-            <StackPanel Orientation='Horizontal'
-                  HorizontalAlignment='Left'
-                  Margin='0,5,0,0'>
-                <Label Content='Revision description :'
-               Width='150' />
-                <TextBox x:Name='revDescribBox'
-                 Width="270"
-                 Text='Issued for coordination'/>
-            </StackPanel>
-
-            <StackPanel Orientation='Horizontal'
-                  HorizontalAlignment='Left'
-                  Margin='0,5,0,0'>
-                <Label Content='Status :'
-               Width='150' />
-                <ComboBox x:Name='statusBox'
-                  MinWidth='270'
-                  Background='{x:Null}'
-                  SelectedIndex='0'>
+            <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
+                <Label Content='Status :' Width='150' />
+                <ComboBox x:Name='statusBox' Width='270' Background='{x:Null}' SelectedIndex='0'>
                     <ComboBoxItem Content='S1 - Suitable For Coordination' />
                     <ComboBoxItem Content='S2 - Suitable For Information' />
                     <ComboBoxItem Content='S3 - Suitable For Review and Comment' />
@@ -138,39 +122,45 @@
                     <ComboBoxItem Content='CR - As Constructed Record Document' />
                 </ComboBox>
             </StackPanel>
-            <Separator Margin='0,15,0,10' />
+            
+            <Separator Margin='10,10,10,0'/>
+            
+        </StackPanel>
+<!--CheckBoxes-->
+        <StackPanel Grid.Row="2" Margin="10,5,10,0">
             <CheckBox x:Name='chkRVTlinks'
                 Content='Remove all RVT links'
                 IsEnabled="{Binding EnableRVT}"
-                IsChecked="{Binding EnableRVT}"
+                IsChecked="{Binding IsCheckedRVT}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkCADlinks'
                 IsEnabled="{Binding EnableCAD}"
-                IsChecked="{Binding EnableCAD}"
+                IsChecked="{Binding IsCheckedCAD}"
                 Margin='0,5,0,0'
                 Content='Remove all CAD links' />
             <CheckBox x:Name='chkPDFlinks'
                 Content='Remove all PDF and image links'
                 IsEnabled="{Binding EnableIMG}"
-                IsChecked="{Binding EnableIMG}"
+                IsChecked="{Binding IsCheckedIMG}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkViews'
                 Content='Remove all views and sheets'
                 IsEnabled="{Binding EnableViews}"
-                IsChecked="{Binding EnableViews}"
+                IsChecked="{Binding IsCheckedViews}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkCoordViews'
-                Content='Keep co-ordination views and sheets'
-                IsChecked='True'
+                Content='Remove non-coordination views and sheets only'
+                IsEnabled="{Binding EnableViews}"
+                IsChecked='{Binding IsCheckedNonCoordViews}'
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkLibraryPhase'
                 IsEnabled="{Binding EnableLib}"
-                IsChecked="{Binding EnableLib}"
+                IsChecked="{Binding IsCheckedLib}"
                 Margin='0,5,0,0'
                 Content='Remove all elements from Library phase' />
             <CheckBox x:Name='chkGroups'
                 IsEnabled="{Binding EnableGroups}"
-                IsChecked="{Binding EnableGroups}"
+                IsChecked="{Binding IsCheckedGroups}"
                 Margin='0,5,0,0'
                 Content='Ungroup all model groups' />
             <CheckBox x:Name='chkIFC'
@@ -182,22 +172,23 @@
                 Margin='0,5,0,0'
                 Content='Export NWC' />
             <Separator Margin='0,10,0,0' />
-            <StackPanel Orientation='Horizontal'
-                  HorizontalAlignment='Center'
-                  Margin='0,5,0,0'>
-                <Button Name='Run'
-            Content='Run'
-                        FontWeight="Medium"
-                        FontSize="15"
-                        VerticalAlignment="Center"
-            Foreground="White"
-            Template="{StaticResource ExecuteButton}" 
-            Width='410'
-            HorizontalAlignment='Center'
-            Margin='10'/>
-                <!-->='IssueModel'/>-->
-
-            </StackPanel>
+            
+        </StackPanel>
+        
+        <!--Run Button-->
+        <StackPanel Grid.Row="3" Height="50">
+            <Button Name='Run'
+                Content='Run'
+                FontWeight="Medium"
+                FontSize="15"
+                VerticalAlignment="Center"
+                HorizontalAlignment='Center'
+                Foreground="White"
+                Template="{StaticResource ExecuteButton}" 
+                Width="400"              
+                Margin='10'
+                Command="{Binding Process}"
+                CommandParameter="{Binding ElementName=IssueModelWindow}"/>
         </StackPanel>
 
     </Grid>
