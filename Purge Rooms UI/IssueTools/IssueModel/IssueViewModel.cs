@@ -1,16 +1,15 @@
-﻿using System.Windows;
-using Autodesk.Revit.DB;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using System.Windows;
 
 namespace Purge_Rooms_UI
-{ 
+{
     public class IssueViewModel : ViewModelBase
     {
         public IssueModel Model { get; set; }
         public RelayCommand<Window> Process { get; set; }
 
-        // Enable checkboxes
+        // Enable CheckBoxes
         private bool _enableRVT;
         public bool EnableRVT
         {
@@ -165,9 +164,14 @@ namespace Purge_Rooms_UI
             if (IsCheckedIMG) Model.RemoveIMGLinks();
             if (IsCheckedViews) Model.RemoveViews();
             if (IsCheckedLib) Model.RemoveLibPhaseElements();
-            if (IsCheckedGroups) Model.UngroupGroups();
+            if (IsCheckedGroups) Model.UngroupGroups();            
 
-            win.Close();
+            MessageBoxResult result = MessageBox.Show(
+                "Success! The model is ready in ... {insert file path here}",
+                "Result",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            if (result == MessageBoxResult.OK) win.Close();
         }
     }
 }
