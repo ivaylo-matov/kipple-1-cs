@@ -1,6 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using System;
+using System.IO;
 using System.Windows;
+using WinForms = System.Windows.Forms;
 
 namespace Purge_Rooms_UI
 {
@@ -8,7 +11,9 @@ namespace Purge_Rooms_UI
     {
         public IssueModel Model { get; set; }
         public RelayCommand<Window> Process { get; set; }
+        public RelayCommand<Window> SelectFolderCommand { get; set; }
 
+        #region Enable CheckBoxes
         // Enable CheckBoxes
         private bool _enableRVT;
         public bool EnableRVT
@@ -58,9 +63,10 @@ namespace Purge_Rooms_UI
             get { return _exportNWC; }
             set { _exportNWC = value; RaisePropertyChanged(() => ExportNWC); }
         }
+        #endregion
 
-
-        // Ckechbox status
+        #region CkechBoxes status
+        // Set CheckBoxes status
         private bool _isCheckedRVT;
         public bool IsCheckedRVT
         {
@@ -103,6 +109,7 @@ namespace Purge_Rooms_UI
             get { return _isCheckedGroups; }
             set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups); }
         }
+#endregion
 
         // Meta-data labels
         private string _inputText;
@@ -136,6 +143,14 @@ namespace Purge_Rooms_UI
             get { return _revDescription; }
             set { _revDescription = value; RaisePropertyChanged(() => RevDescription); }
         }
+        private string _targetDir;
+        public string TargetDir
+        {
+            get { return _targetDir; }
+            set { _targetDir = value; RaisePropertyChanged(() => TargetDir); }
+        }
+
+
 
 
 
@@ -144,6 +159,7 @@ namespace Purge_Rooms_UI
         {
             Model = model;
 
+            // Set CheckBox enabled if the model contains relevant elements 
             EnableRVT = model.EnableRVTLinks();
             EnableCAD = model.EnableCADLinks();
             EnableIMG = model.EnableIMGLinks();
@@ -151,27 +167,63 @@ namespace Purge_Rooms_UI
             EnableLib = model.EnableLibPhase();
             EnableGroup = model.EnableGroups();
 
+            // Set initial revision parameter values
+            IssuedTo = model.CollectCurrentMetaData()["IssuedTo"];
+            IssuedBy = model.CollectCurrentMetaData()["IssuedBy"];
+            ApprovedBy = model.CollectCurrentMetaData()["ApprovedBy"];
+            RevDescription = model.CollectCurrentMetaData()["RevDescription"];
+            TargetDir = model.CollectCurrentMetaData()["TargetDir"];
+
             Process = new RelayCommand<Window>(OnExecuteRun);
+            SelectFolderCommand = new RelayCommand<Window>(OnSelectFolderCommand);
         }
         private void OnExecuteRun(Window win)
         {
-            Model.UpdateMetaData(RevDescription, IssuedBy, IssuedTo, ApprovedBy);
-            Model.SyncCloudModel();
-            Model.SaveIssueModel();
+            try
+            {
+                Model.UpdateMetaData(RevDescription, IssuedBy, IssuedTo, ApprovedBy);
+                Model.SyncCloudModel();
+                Model.SaveIssueModel(TargetDir);
 
-            if (IsCheckedRVT) Model.RemoveRVTLinks();
-            if (IsCheckedCAD) Model.RemoveCADLinks();
-            if (IsCheckedIMG) Model.RemoveIMGLinks();
-            if (IsCheckedViews) Model.RemoveViews();
-            if (IsCheckedLib) Model.RemoveLibPhaseElements();
-            if (IsCheckedGroups) Model.UngroupGroups();            
+                if (IsCheckedRVT) Model.RemoveRVTLinks();
+                if (IsCheckedCAD) Model.RemoveCADLinks();
+                if (IsCheckedIMG) Model.RemoveIMGLinks();
+                if (IsCheckedViews) Model.RemoveViews();
+                if (IsCheckedLib) Model.RemoveLibPhaseElements();
+                if (IsCheckedGroups) Model.UngroupGroups();
 
-            MessageBoxResult result = MessageBox.Show(
-                "Success! The model is ready in ... {insert file path here}",
-                "Result",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            if (result == MessageBoxResult.OK) win.Close();
+                MessageBoxResult result = MessageBox.Show(
+                    "Success! The model is ready in ... {insert file path here}",
+                    "Result",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                if (result == MessageBoxResult.OK) win.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"SHIT.{Environment.NewLine} {ex}",
+                    "Error!",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                win.Close();
+            }
+        }
+        private void OnSelectFolderCommand(Window win)
+        {
+            if (!Directory.Exists(TargetDir)) Directory.CreateDirectory(TargetDir);
+
+            WinForms.FolderBrowserDialog dialog = new WinForms.FolderBrowserDialog();
+            dialog.SelectedPath = TargetDir;
+
+            WinForms.DialogResult result = dialog.ShowDialog();
+
+            if (result == WinForms.DialogResult.OK)
+            {
+                TargetDir = dialog.SelectedPath;
+                RaisePropertyChanged(() => TargetDir);
+            }
         }
     }
 }

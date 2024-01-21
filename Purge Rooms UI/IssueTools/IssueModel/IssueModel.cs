@@ -5,7 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using UIFramework;
+using WinForms = System.Windows.Forms;
 
 namespace Purge_Rooms_UI
 {
@@ -280,30 +283,56 @@ namespace Purge_Rooms_UI
             }
         }
 
+        public Dictionary<string, string> CollectCurrentMetaData()
+        {
+            ViewSheet splashScr = Doc.ActiveView as ViewSheet;
+            Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+            ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+            Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
+
+            ProjectInfo info = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ProjectInfo))
+                .Cast<ProjectInfo>().FirstOrDefault();
+            string targetDir = $"{info.LookupParameter("Project Directory").AsValueString()}" +
+                $"\\01 WIP - Internal Work\\" +
+                $"{DateTime.Now.ToString("yyMMdd")}";
+
+            return new Dictionary<string, string> {
+                { "IssuedTo", lastRev.IssuedTo },
+                { "IssuedBy", lastRev.IssuedBy },
+                { "ApprovedBy", approvedByParam.AsValueString() },
+                { "RevDescription", lastRev.Description },
+                { "TargetDir", targetDir}
+            };
+        }
+
         public void UpdateMetaData(string revDescription, string issuedBy, string issuedTo, string approvedBy)
         {
             using (Transaction tMeta = new Transaction(Doc, "Update metadata"))
             {
+                ViewSheet splashScr = Doc.ActiveView as ViewSheet;
+                Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+                ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+
                 tMeta.Start();
-
-                Revision newRev = Revision.Create(Doc);
-                newRev.Description = revDescription;
-                newRev.IssuedBy = issuedBy;
-                newRev.IssuedTo = issuedTo;
-                newRev.RevisionDate = DateTime.Now.ToString("dd.MM.yy");
-
                 try
                 {
-                    ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-                    ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+                    Revision newRev = Revision.Create(Doc);
+                    newRev.Description = revDescription;
+                    newRev.IssuedBy = issuedBy;
+                    newRev.IssuedTo = issuedTo;
+                    newRev.RevisionDate = DateTime.Now.ToString("dd.MM.yy");
+
                     currentRevs.Add(newRev.Id);
                     splashScr.SetAdditionalRevisionIds(currentRevs);
-                    splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).Set(approvedBy);
+                    approvedByParam.Set(approvedBy);
                     splashScr.get_Parameter(BuiltInParameter.SHEET_DRAWN_BY).Set(issuedBy);
                     splashScr.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE).Set(DateTime.Now.ToString("dd.MM.yy"));
                 }
-                catch { }
-
+                catch (Exception ex)
+                {
+                    TaskDialog.Show("Error!", $"Metadata could not be updated.{Environment.NewLine} {ex}");
+                }
                 tMeta.Commit();
             }
         }
@@ -323,20 +352,12 @@ namespace Purge_Rooms_UI
             syncOpt.SaveLocalAfter = true;
             Doc.SynchronizeWithCentral(tOpt, syncOpt);
         }
-        public void SaveIssueModel()
+        public void SaveIssueModel(string targetDir)
         {
-            var prjInfo = new FilteredElementCollector(Doc)
-                .OfClass(typeof(ProjectInfo))
-                .Cast<ProjectInfo>()
-                .FirstOrDefault();
-            string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
-            string date = DateTime.Now.ToString("yyMMdd");
-            string dirPath = $"{prjDir}\\01 WIP - Internal Work\\{date}";
+            if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
             string fileName = Doc.Title.Split('_')[0];
-            string filePath = dirPath + "\\" + fileName + ".rvt";
-
-            if (!Directory.Exists(dirPath))  Directory.CreateDirectory(dirPath);
-
+            string filePath = $"{targetDir}\\{fileName}.rvt";
+            
             WorksharingSaveAsOptions wsOpt = new WorksharingSaveAsOptions();
 
             SaveAsOptions sOpt = new SaveAsOptions();
@@ -353,14 +374,22 @@ namespace Purge_Rooms_UI
             rOpt.FamilyWorksets = true;
             rOpt.UserWorksets = true;
             rOpt.CheckedOutElements = true;
+
             SynchronizeWithCentralOptions syncOpt = new SynchronizeWithCentralOptions();
             syncOpt.SetRelinquishOptions(rOpt);
             syncOpt.Compact = false;
             syncOpt.SaveLocalBefore = false;
             syncOpt.SaveLocalAfter = false;
+
             Doc.SynchronizeWithCentral(tOpt, syncOpt);
         }
         
+        public void SelectFolder(string folderPath)
+        {
+            WinForms.FolderBrowserDialog dialog = new WinForms.FolderBrowserDialog();
+            dialog.SelectedPath = folderPath;
+            dialog.ShowDialog();
+        }
         
 
      

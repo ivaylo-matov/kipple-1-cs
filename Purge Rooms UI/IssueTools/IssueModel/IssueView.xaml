@@ -13,12 +13,22 @@
         FontSize="14"
         FontWeight="Light"
         Width='460'
-        Height='575'
+        Height='610'
         ResizeMode="NoResize">
 
 
 
     <Window.Resources>
+
+        <Style x:Key="TriggerStyle" TargetType="Button">
+            <Setter Property="Background" Value="Black"/>
+            <Style.Triggers>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Foreground" Value="Blue"/>
+                </Trigger>
+            </Style.Triggers>
+
+        </Style>
 
         <ControlTemplate x:Key="ExecuteButton" TargetType="Button">
             <Border Background="Black"  
@@ -103,20 +113,17 @@
 
             <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
                 <Label Content='Revision description :' Width='150' />
-                <TextBox x:Name='revDescribBox' Width="270" Text='{Binding RevDescription}'/>
+                <TextBox x:Name='revDescribBox' Width="270" Text='{Binding RevDescription}' FontFamily="Calibri"/>
             </StackPanel>
+
             <!--<userControls:IssueMetadataTextBox InputText="{Binding IssuedTo}" LabelText="Issued to :"/>
             <userControls:IssueMetadataTextBox InputText="{Binding IssuedBy}" LabelText="Issued by :"/>
             <userControls:IssueMetadataTextBox InputText="{Binding ApprovedBy}" LabelText="Approved by :"/>
             <userControls:IssueMetadataTextBox InputText="{Binding RevDescription}" LabelText="Revision description"/>-->
-
-
-
-
-
+            
             <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
-                <Label Content='Status :' Width='150' />
-                <ComboBox x:Name='statusBox' Width='270' Background='{x:Null}' SelectedIndex='0'>
+                <Label Content='Status :' Width='150' FontFamily="Calibri"/>
+                <ComboBox x:Name='statusBox' Width='270' Background='{x:Null}' SelectedIndex='0' FontFamily="Calibri">
                     <ComboBoxItem Content='S1 - Suitable For Coordination' />
                     <ComboBoxItem Content='S2 - Suitable For Information' />
                     <ComboBoxItem Content='S3 - Suitable For Review and Comment' />
@@ -128,7 +135,12 @@
                     <ComboBoxItem Content='CR - As Constructed Record Document' />
                 </ComboBox>
             </StackPanel>
-            
+
+            <StackPanel Orientation='Horizontal' HorizontalAlignment='Left' Margin='0,5,0,0'>
+                <Label Content='Target folder :' Width='150'/>
+                <Button x:Name="btnFolder" Width="270" Content="{Binding TargetDir}" Background="#F0F0F0" BorderBrush="DarkGray" HorizontalContentAlignment="Left" FontFamily="Calibri" Command="{Binding SelectFolderCommand}"/>
+            </StackPanel>
+
             <Separator Margin='5,10,5,0'/>
             
         </StackPanel>
@@ -186,16 +198,19 @@
             <Button Name='Run'
                 Content='Run'
                 FontWeight="Medium"
+   
                 FontSize="15"
                 VerticalAlignment="Center"
                 HorizontalAlignment='Center'
                 Foreground="White"
-                Template="{StaticResource ExecuteButton}" 
-                Width="400"              
+                Template="{StaticResource ExecuteButton}"
+                Width="400"   
                 Margin='10'
                 Command="{Binding Process}"
-                CommandParameter="{Binding ElementName=IssueModelWindow}"/>
+                CommandParameter="{Binding ElementName=IssueModelWindow}"/>                
         </StackPanel>
+        
+        <!--Style="{StaticResource TriggerStyle}"-->
 
     </Grid>
 </Window>
