@@ -292,20 +292,26 @@ namespace Purge_Rooms_UI
         public Dictionary<string, string> CollectCurrentMetaData()
         {
             ViewSheet splashScr = Doc.ActiveView as ViewSheet;
+            // tries to get value for the approved by parameter either by the last revision of by the ProjectLead parameter
             Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+            string approvedByValue = string.Empty;
+            if (string.IsNullOrEmpty(approvedByValue)) approvedByValue = GetProjectLeadInitials(Doc);
+            
+
             ProjectInfo info = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ProjectInfo))
                 .Cast<ProjectInfo>()
                 .FirstOrDefault();
             string targetDir = TargetFolderNotFoundMessage;  
 
-            if (info.LookupParameter("Project Directory")?.AsValueString() != "") // != null && info.LookupParameter("Project Directory").AsString() != "")
+            if (info.LookupParameter("Project Directory")?.AsValueString() != string.Empty)
             {
                 string projectDir = info.LookupParameter("Project Directory").AsValueString();
                 targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
             }
 
             ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+            // try to get the data from the latest revision
             if (currentRevs.Count() > 0)
             {
                 Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
@@ -322,7 +328,7 @@ namespace Purge_Rooms_UI
             {
                 return new Dictionary<string, string> {
                 { "IssuedTo", "" },
-                { "IssuedBy", "" },
+                { "IssuedBy", GetUserInitials(UIApp) },
                 { "ApprovedBy", approvedByParam.AsValueString() },
                 { "RevDescription", "" },
                 { "TargetDir", targetDir}
@@ -678,53 +684,36 @@ namespace Purge_Rooms_UI
         }
         public static string GetProjectLeadInitials(Document doc)
         {
-            string plInitials = "";
+            string plInitials = string.Empty;
             try
             {
-                ProjectInfo pi = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
-                if (pi.LookupParameter("ACG_Project Lead").HasValue)
+                ProjectInfo pi = new FilteredElementCollector(doc)
+                    .OfClass(typeof(ProjectInfo))
+                    .Cast<ProjectInfo>()
+                    .FirstOrDefault();
+                if (pi.LookupParameter("ACG_Project Lead")?.AsValueString() != string.Empty)
                 {
                     string plName = pi.LookupParameter("ACG_Project Lead").AsString();
-                    if (plName.Count() > 0 && plName.Count() <= 3)
-                    {
-                        plInitials = plName;
-                    }
-                    else if (plName.Count() > 3)
-                    {
-                        plInitials = string.Concat(plName.Where(char.IsUpper));
-                    }
+                    if (plName.Count() <= 3) plInitials = plName;
+                    else plInitials = string.Concat(plName.Where(char.IsUpper));
                 }
             }
             catch (Exception ex) { }
 
             return plInitials;
         }
-        //public static string GetUserInitials(Application app)
-        //{
-        //    string userInitials = "";
-        //    try
-        //    {
-        //        if (app.Username.StartsWith("ross.boyter"))
-        //        {
-        //            userInitials = "RDB";
-        //        }
-        //        else if (app.Username.StartsWith("jp.v"))
-        //        {
-        //            userInitials = "JPV";
-
-        //        }
-        //        else
-        //        {
-
-        //            char first = app.Username.Split('.')[0][0];
-        //            char second = app.Username.Split('.')[1][0];
-        //            userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
-        //        }
-        //    }
-        //    catch { }
-
-        //    return userInitials;
-        //}
+        public static string GetUserInitials(UIApplication uiApp)
+        {
+            string userInitials = string.Empty;
+            try
+            {
+                char first = uiApp.Application.Username.Split('.')[0][0];
+                char second = uiApp.Application.Username.Split('.')[1][0];
+                userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
+            }
+            catch { }
+            return userInitials;
+        }
         public static void SusspendWarnings(UIControlledApplication application)
         {
             // call our method that will load up our toolbar
