@@ -30,7 +30,8 @@ namespace Purge_Rooms_UI
         private static List<Phase> LogLibPhase = new List<Phase>();
         private static List<Group> LogModelGroups = new List<Group>();
 
-  
+        public static string TargetFolderNotFoundMessage = "Not found! Please navigate to target folder.";
+
 
         public void Run()
         {
@@ -283,40 +284,70 @@ namespace Purge_Rooms_UI
             }
         }
 
+        /// <summary>
+        /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.
+        /// It also looks for the project directory in Project Information.
+        /// </summary>
+        /// <returns></returns>
         public Dictionary<string, string> CollectCurrentMetaData()
         {
             ViewSheet splashScr = Doc.ActiveView as ViewSheet;
             Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
-            ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
-            Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
-
             ProjectInfo info = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ProjectInfo))
-                .Cast<ProjectInfo>().FirstOrDefault();
-            string targetDir = $"{info.LookupParameter("Project Directory").AsValueString()}" +
-                $"\\01 WIP - Internal Work\\" +
-                $"{DateTime.Now.ToString("yyMMdd")}";
+                .Cast<ProjectInfo>()
+                .FirstOrDefault();
+            string targetDir = TargetFolderNotFoundMessage;  
 
-            return new Dictionary<string, string> {
+            if (info.LookupParameter("Project Directory")?.AsValueString() != "") // != null && info.LookupParameter("Project Directory").AsString() != "")
+            {
+                string projectDir = info.LookupParameter("Project Directory").AsValueString();
+                targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
+            }
+
+            ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+            if (currentRevs.Count() > 0)
+            {
+                Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
+
+                return new Dictionary<string, string> {
                 { "IssuedTo", lastRev.IssuedTo },
                 { "IssuedBy", lastRev.IssuedBy },
                 { "ApprovedBy", approvedByParam.AsValueString() },
                 { "RevDescription", lastRev.Description },
                 { "TargetDir", targetDir}
-            };
+                };
+            }
+            else
+            {
+                return new Dictionary<string, string> {
+                { "IssuedTo", "" },
+                { "IssuedBy", "" },
+                { "ApprovedBy", approvedByParam.AsValueString() },
+                { "RevDescription", "" },
+                { "TargetDir", targetDir}
+                };
+            }
         }
 
+        /// <summary>
+        /// Pushed the revised metadata to the Splash Page, which should be the active view.
+        /// </summary>
+        /// <param name="revDescription"></param>
+        /// <param name="issuedBy"></param>
+        /// <param name="issuedTo"></param>
+        /// <param name="approvedBy"></param>
         public void UpdateMetaData(string revDescription, string issuedBy, string issuedTo, string approvedBy)
         {
             using (Transaction tMeta = new Transaction(Doc, "Update metadata"))
             {
-                ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-                Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
-                ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
-
                 tMeta.Start();
                 try
                 {
+                    ViewSheet splashScr = Doc.ActiveView as ViewSheet;
+                    Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+                    ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+
                     Revision newRev = Revision.Create(Doc);
                     newRev.Description = revDescription;
                     newRev.IssuedBy = issuedBy;

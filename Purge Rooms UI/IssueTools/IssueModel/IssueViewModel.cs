@@ -210,12 +210,20 @@ namespace Purge_Rooms_UI
                 win.Close();
             }
         }
+
+        /// <summary>
+        /// Opens a folder browser dialog at the specified target directory.
+        /// </summary>
+        /// <param name="win"></param>
         private void OnSelectFolderCommand(Window win)
         {
-            if (!Directory.Exists(TargetDir)) Directory.CreateDirectory(TargetDir);
-
             WinForms.FolderBrowserDialog dialog = new WinForms.FolderBrowserDialog();
-            dialog.SelectedPath = TargetDir;
+
+            if (TargetDir != IssueModel.TargetFolderNotFoundMessage)
+            {
+                if (!Directory.Exists(TargetDir)) Directory.CreateDirectory(TargetDir);
+                dialog.SelectedPath = TargetDir;
+            }     
 
             WinForms.DialogResult result = dialog.ShowDialog();
 
