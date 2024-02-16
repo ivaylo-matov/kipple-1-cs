@@ -422,10 +422,6 @@ namespace Purge_Rooms_UI
             dialog.ShowDialog();
         }
         
-
-     
-
-        
         private bool CheckForCoordSheets(Document doc)
         {
             var allSheets = new FilteredElementCollector(doc).OfClass(typeof(ViewSheet)).Cast<ViewSheet>().Where(s => !s.SheetNumber.Contains("Project Information")).ToList();
