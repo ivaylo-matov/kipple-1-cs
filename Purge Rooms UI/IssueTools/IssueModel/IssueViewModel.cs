@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Windows;
 using WinForms = System.Windows.Forms;
+using Autodesk.Revit.UI;
 
 namespace Purge_Rooms_UI
 {
@@ -109,7 +110,13 @@ namespace Purge_Rooms_UI
             get { return _isCheckedGroups; }
             set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups); }
         }
-#endregion
+        private bool _isCheckedIFC;
+        public bool IsCheckedIFC
+        {
+            get { return _isCheckedIFC; }
+            set { _isCheckedIFC = value; RaisePropertyChanged(() => IsCheckedIFC); }
+        }
+        #endregion
 
         // Meta-data labels
         private string _inputText;
@@ -149,6 +156,12 @@ namespace Purge_Rooms_UI
             get { return _targetDir; }
             set { _targetDir = value; RaisePropertyChanged(() => TargetDir); }
         }
+        private string _targetFileName;
+        public string TargetFileName
+        {
+            get { return _targetFileName; }
+            set { _targetFileName = value; RaisePropertyChanged(() => TargetFileName); }
+        }
 
 
 
@@ -173,42 +186,56 @@ namespace Purge_Rooms_UI
             ApprovedBy = model.CollectCurrentMetaData()["ApprovedBy"];
             RevDescription = model.CollectCurrentMetaData()["RevDescription"];
             TargetDir = model.CollectCurrentMetaData()["TargetDir"];
+            TargetFileName = model.CollectCurrentMetaData()["TargetFileName"];
 
             Process = new RelayCommand<Window>(OnExecuteRun);
             SelectFolderCommand = new RelayCommand<Window>(OnSelectFolderCommand);
         }
         private void OnExecuteRun(Window win)
         {
-            try
+            if (TargetDir != IssueModel.TargetFolderNotFoundMessage)
             {
-                Model.UpdateMetaData(RevDescription, IssuedBy, IssuedTo, ApprovedBy);
-                Model.SyncCloudModel();
-                Model.SaveIssueModel(TargetDir);
+                try
+                {
+                    Model.UpdateMetaData(RevDescription, IssuedBy, IssuedTo, ApprovedBy);
+                    Model.SyncCloudModel();
+                    Model.SaveIssueModel(TargetDir, TargetFileName);
 
-                if (IsCheckedRVT) Model.RemoveRVTLinks();
-                if (IsCheckedCAD) Model.RemoveCADLinks();
-                if (IsCheckedIMG) Model.RemoveIMGLinks();
-                if (IsCheckedViews) Model.RemoveViews();
-                if (IsCheckedLib) Model.RemoveLibPhaseElements();
-                if (IsCheckedGroups) Model.UngroupGroups();
+                    if (IsCheckedRVT) Model.RemoveRVTLinks();
+                    if (IsCheckedCAD) Model.RemoveCADLinks();
+                    if (IsCheckedIMG) Model.RemoveIMGLinks();
+                    if (IsCheckedViews) Model.RemoveViews();
+                    if (IsCheckedLib) Model.RemoveLibPhaseElements();
+                    if (IsCheckedGroups) Model.UngroupGroups();
 
-                MessageBoxResult result = MessageBox.Show(
-                    "Success! The model is ready in ... {insert file path here}",
-                    "Result",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                if (result == MessageBoxResult.OK) win.Close();
+                    if (IsCheckedIFC) Model.ExportIFC(TargetDir, TargetFileName);
+
+                    MessageBoxResult result = MessageBox.Show(
+                        $"Success! The model is ready in {TargetDir}",
+                        "Result",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    if (result == MessageBoxResult.OK) win.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"SHIT.{Environment.NewLine} {ex}",
+                        "Error!",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    win.Close();
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(
-                    $"SHIT.{Environment.NewLine} {ex}",
-                    "Error!",
+                MessageBox.Show("Error!", "Please provide a target folder where the file should be saved.",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
-
                 win.Close();
             }
+            
         }
 
         /// <summary>

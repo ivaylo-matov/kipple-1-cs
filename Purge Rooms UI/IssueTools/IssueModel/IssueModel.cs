@@ -292,19 +292,16 @@ namespace Purge_Rooms_UI
         public Dictionary<string, string> CollectCurrentMetaData()
         {
             ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-            // tries to get value for the approved by parameter either by the last revision of by the ProjectLead parameter
-            Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
-            string approvedByValue = string.Empty;
-            if (string.IsNullOrEmpty(approvedByValue)) approvedByValue = GetProjectLeadInitials(Doc);
-            
+            Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);            
 
             ProjectInfo info = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ProjectInfo))
                 .Cast<ProjectInfo>()
                 .FirstOrDefault();
+
             string targetDir = TargetFolderNotFoundMessage;  
 
-            if (info.LookupParameter("Project Directory")?.AsValueString() != string.Empty)
+            if (info.LookupParameter("Project Directory") != null)
             {
                 string projectDir = info.LookupParameter("Project Directory").AsValueString();
                 targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
@@ -321,7 +318,8 @@ namespace Purge_Rooms_UI
                 { "IssuedBy", lastRev.IssuedBy },
                 { "ApprovedBy", approvedByParam.AsValueString() },
                 { "RevDescription", lastRev.Description },
-                { "TargetDir", targetDir}
+                { "TargetDir", targetDir},
+                { "TargetFileName", Doc.Title}
                 };
             }
             else
@@ -331,7 +329,8 @@ namespace Purge_Rooms_UI
                 { "IssuedBy", GetUserInitials(UIApp) },
                 { "ApprovedBy", approvedByParam.AsValueString() },
                 { "RevDescription", "" },
-                { "TargetDir", targetDir}
+                { "TargetDir", targetDir},
+                { "TargetFileName", Doc.Title}
                 };
             }
         }
@@ -373,6 +372,10 @@ namespace Purge_Rooms_UI
                 tMeta.Commit();
             }
         }
+
+        /// <summary>
+        /// Synchronizes the local model. Pushes the updated metadata to the central model.
+        /// </summary>
         public void SyncCloudModel()
         {
             TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
@@ -389,10 +392,14 @@ namespace Purge_Rooms_UI
             syncOpt.SaveLocalAfter = true;
             Doc.SynchronizeWithCentral(tOpt, syncOpt);
         }
-        public void SaveIssueModel(string targetDir)
+
+        /// <summary>
+        /// Saves a clean version of the model in a given location.
+        /// </summary>
+        /// <param name="targetDir"></param>
+        public void SaveIssueModel(string targetDir, string fileName)
         {
             if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-            string fileName = Doc.Title.Split('_')[0];
             string filePath = $"{targetDir}\\{fileName}.rvt";
             
             WorksharingSaveAsOptions wsOpt = new WorksharingSaveAsOptions();
@@ -579,21 +586,20 @@ namespace Purge_Rooms_UI
             return viewIdsToDelete;
         }
  
-        
-  
-        public void ExportIFC()
+        //TODO: Allow the user to modify at least some of the settings
+        /// <summary>
+        /// Exports IFC file with predefined settings
+        /// </summary>
+        /// <param name="dirPath"></param>
+        /// <param name="fileName"></param>
+        public void ExportIFC(string dirPath, string fileName)
         {
-            var prjInfo = new FilteredElementCollector(Doc)
+            ProjectInfo prjInfo = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ProjectInfo))
                 .Cast<ProjectInfo>()
                 .FirstOrDefault();
-            string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
-            DateTime today = DateTime.Today;
-            string date = today.ToString("yyMMdd");
-            string dirPath = $"{prjDir}\\01 WIP - Internal Work\\{date}";
-            string fileName = Doc.Title.Split('_')[0];
 
-            var IFCview = new FilteredElementCollector(Doc)
+            View IFCview = new FilteredElementCollector(Doc)
                 .OfClass(typeof(Autodesk.Revit.DB.View))
                 .Cast<Autodesk.Revit.DB.View>()
                 .Where(v => v.Name == "IFC Export")
@@ -714,12 +720,12 @@ namespace Purge_Rooms_UI
             catch { }
             return userInitials;
         }
-        public static void SusspendWarnings(UIControlledApplication application)
+        public static void SuspendWarnings(UIControlledApplication application)
         {
             // call our method that will load up our toolbar
             application.ControlledApplication.FailuresProcessing += new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
         }
-        public static void UnsusspendWarnings(UIControlledApplication application)
+        public static void UnSuspendWarnings(UIControlledApplication application)
         {
             // call our method that will load up our toolbar
             application.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
