@@ -191,9 +191,9 @@
                 IsChecked="{Binding IsCheckedIFC}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkNWC'
-                IsChecked='False'
                 Margin='0,5,0,0'
-                Content='Export NWC' />
+                Content='Export NWC'
+                IsChecked="{Binding IsCheckedNWC}"/>
             <Separator Margin='0,10,0,0' />
             
         </StackPanel>

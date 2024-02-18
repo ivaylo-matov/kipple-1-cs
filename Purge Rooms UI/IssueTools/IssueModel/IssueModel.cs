@@ -27,6 +27,7 @@ namespace Purge_Rooms_UI
         private static List<ImportInstance> LogCADLinks = new List<ImportInstance>();
         private static List<ImageType> LogIMGLinks = new List<ImageType>();
         private static List<View> LogViews = new List<View>();
+        private static List<ElementId> LogCoordViewIds = new List<ElementId>();
         private static List<Phase> LogLibPhase = new List<Phase>();
         private static List<Group> LogModelGroups = new List<Group>();
 
@@ -37,6 +38,8 @@ namespace Purge_Rooms_UI
         {
 
         }
+
+        #region Enable/Disable CheckBoxes
         // Pre-process elements
         public bool EnableRVTLinks()
         {
@@ -73,6 +76,37 @@ namespace Purge_Rooms_UI
                 .ToList();
             return LogViews.Count > 0;
         }
+        public bool EnableCoordViews()
+        {
+            List <ElementId> coordViewIds = new FilteredElementCollector(Doc)
+                .OfCategory(BuiltInCategory.OST_Views)
+                .WhereElementIsNotElementType()
+                .Cast<View>()
+                .Where(v => v.Name.ToLower().Contains("_coord"))
+                .Select(v => v.Id)
+                .ToList();
+
+            List<ElementId> coordSheetIds = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ViewSheet))
+                .Cast<ViewSheet>()
+                .Where(s => s.Name.ToLower().Contains("_coord"))
+                .Where(s => s != Doc.ActiveView)
+                .Select(s => s.Id)
+                .ToList();
+
+            List<ElementId> viewsOnSheetIds = new List<ElementId>();
+            foreach (ElementId id in coordSheetIds)
+            {
+                ViewSheet sheet = Doc.GetElement(id) as ViewSheet;
+                viewsOnSheetIds.AddRange(sheet.GetAllPlacedViews());
+            }
+
+            LogCoordViewIds.AddRange(coordViewIds);
+            LogCoordViewIds.AddRange(coordSheetIds);
+            LogCoordViewIds.AddRange(viewsOnSheetIds);
+
+            return LogCoordViewIds.Count > 0;
+        }
         public bool EnableLibPhase()
         {
             LogLibPhase = new FilteredElementCollector(Doc)
@@ -90,6 +124,7 @@ namespace Purge_Rooms_UI
             .ToList();
             return LogModelGroups.Count > 0;
         }
+        #endregion
 
         public void RemoveRVTLinks()
         {
@@ -283,6 +318,7 @@ namespace Purge_Rooms_UI
                 }
             }
         }
+        
 
         /// <summary>
         /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.
@@ -292,7 +328,9 @@ namespace Purge_Rooms_UI
         public Dictionary<string, string> CollectCurrentMetaData()
         {
             ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-            Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);            
+            //TODO: this breaks if the active view is not a SHEET. Handle this.
+            string approvedByValue = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).AsValueString();
+            if (approvedByValue == "Approver") approvedByValue = "";
 
             ProjectInfo info = new FilteredElementCollector(Doc)
                 .OfClass(typeof(ProjectInfo))
@@ -316,21 +354,21 @@ namespace Purge_Rooms_UI
                 return new Dictionary<string, string> {
                 { "IssuedTo", lastRev.IssuedTo },
                 { "IssuedBy", lastRev.IssuedBy },
-                { "ApprovedBy", approvedByParam.AsValueString() },
+                { "ApprovedBy", approvedByValue },
                 { "RevDescription", lastRev.Description },
                 { "TargetDir", targetDir},
-                { "TargetFileName", Doc.Title}
+                { "TargetFileName", GetCentralModelName()}
                 };
             }
             else
             {
                 return new Dictionary<string, string> {
                 { "IssuedTo", "" },
-                { "IssuedBy", GetUserInitials(UIApp) },
-                { "ApprovedBy", approvedByParam.AsValueString() },
+                { "IssuedBy", GetUserInitials() },
+                { "ApprovedBy", "" },
                 { "RevDescription", "" },
                 { "TargetDir", targetDir},
-                { "TargetFileName", Doc.Title}
+                { "TargetFileName", GetCentralModelName()}
                 };
             }
         }
@@ -449,46 +487,7 @@ namespace Purge_Rooms_UI
             }
             return result;
         }
-        private bool CheckForCoordViews(Document doc)
-        {
-            List<View> allViews = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Views).WhereElementIsNotElementType().
-                Where(v => v.Name != "IFC Export").Where(v => v.Name != "Navisworks").
-                Cast<View>().ToList();
-            List<View> viewsToProcess = new List<View>();
-            bool result = false;
 
-
-            foreach (View view in allViews)
-            {
-                if (!view.LookupParameter("View Folder 1 (View type)").HasValue) continue;
-                else
-                {
-                    if (view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-
-                List<View> allSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<View>().ToList();
-                foreach (View sch in allSchedules)
-                {
-                    if (!sch.LookupParameter("View Folder 1 (View type)").HasValue)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        if (sch.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-                        {
-                            result = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            return result;
-        }
         public static List<ElementId> DeleteNonCoordViews(Document doc)
         {
             List<ElementId> viewIdsToDelete = new List<ElementId>();
@@ -599,6 +598,7 @@ namespace Purge_Rooms_UI
                 .Cast<ProjectInfo>()
                 .FirstOrDefault();
 
+            // get the IFC Export view
             View IFCview = new FilteredElementCollector(Doc)
                 .OfClass(typeof(Autodesk.Revit.DB.View))
                 .Cast<Autodesk.Revit.DB.View>()
@@ -609,7 +609,9 @@ namespace Purge_Rooms_UI
             ifcOpt.FileVersion = IFCVersion.IFC2x3;
             ifcOpt.WallAndColumnSplitting = false;
             ifcOpt.ExportBaseQuantities = false;
-            ifcOpt.FilterViewId = IFCview.Id;
+            // if there is no IFC Export view, all elements in the model will be exported
+            if (IFCview != null) ifcOpt.FilterViewId = IFCview.Id;
+
 
             ifcOpt.AddOption("ExportInternalRevitPropertySets", "false");
             ifcOpt.AddOption("ExportIFCCommonPropertySets", "true");
@@ -634,31 +636,34 @@ namespace Purge_Rooms_UI
             ifcOpt.AddOption("SitePlacement", "0");
             Doc.Export(dirPath, fileName, ifcOpt);
         }
-        public static void ExportNWC(Document doc)
+
+        /// <summary>
+        /// Exports NWC file with predefined settings
+        /// </summary>
+        /// <param name="dirPath"></param>
+        /// <param name="fileName"></param>
+        public void ExportNWC(string dirPath, string fileName)
         {
-            var prjInfo = new FilteredElementCollector(doc).OfClass(typeof(ProjectInfo)).Cast<ProjectInfo>().FirstOrDefault();
-            string prjDir = prjInfo.LookupParameter("Project Directory").AsString();
-            DateTime today = DateTime.Today;
-            string date = today.ToString("yyMMdd");
-            string dirPath = $"{prjDir}\\01 WIP - Internal Work\\{date}";
-            string fileName = doc.Title.Split('_')[0];
+            ProjectInfo prjInfo = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ProjectInfo))
+                .Cast<ProjectInfo>()
+                .FirstOrDefault();
 
-            try
-            {
-                var NWCview = new FilteredElementCollector(doc).OfClass(typeof(Autodesk.Revit.DB.View)).Cast<Autodesk.Revit.DB.View>().FirstOrDefault(v => v.Name == "Navisworks");
-                NavisworksExportOptions nwcOpt = new NavisworksExportOptions();
-                nwcOpt.ExportScope = NavisworksExportScope.View;
-                nwcOpt.ViewId = NWCview.Id;
-                nwcOpt.ExportLinks = false;
-                nwcOpt.Coordinates = 0;
-                nwcOpt.ExportElementIds = true;
-                nwcOpt.ConvertElementProperties = true;
-                nwcOpt.ExportRoomAsAttribute = true;
-                nwcOpt.ExportRoomGeometry = false;
+            View NWCview = new FilteredElementCollector(Doc)
+                .OfClass(typeof(Autodesk.Revit.DB.View))
+                .Cast<Autodesk.Revit.DB.View>()
+                .FirstOrDefault(v => v.Name == "NWC Export");
 
-                doc.Export(dirPath, fileName, nwcOpt);
-            }
-            catch { }
+            NavisworksExportOptions nwcOpt = new NavisworksExportOptions();
+            nwcOpt.ExportScope = NavisworksExportScope.View;
+            if (NWCview != null) nwcOpt.ViewId = NWCview.Id;
+            nwcOpt.ExportLinks = false;
+            nwcOpt.Coordinates = 0;
+            nwcOpt.ExportElementIds = true;
+            nwcOpt.ConvertElementProperties = true;
+            nwcOpt.ExportRoomAsAttribute = true;
+            nwcOpt.ExportRoomGeometry = false;
+            Doc.Export(dirPath, fileName, nwcOpt);
         }
         public static void PurgeModel(Document doc)
         {
@@ -688,38 +693,34 @@ namespace Purge_Rooms_UI
                 }
             }
         }
-        public static string GetProjectLeadInitials(Document doc)
-        {
-            string plInitials = string.Empty;
-            try
-            {
-                ProjectInfo pi = new FilteredElementCollector(doc)
-                    .OfClass(typeof(ProjectInfo))
-                    .Cast<ProjectInfo>()
-                    .FirstOrDefault();
-                if (pi.LookupParameter("ACG_Project Lead")?.AsValueString() != string.Empty)
-                {
-                    string plName = pi.LookupParameter("ACG_Project Lead").AsString();
-                    if (plName.Count() <= 3) plInitials = plName;
-                    else plInitials = string.Concat(plName.Where(char.IsUpper));
-                }
-            }
-            catch (Exception ex) { }
 
-            return plInitials;
-        }
-        public static string GetUserInitials(UIApplication uiApp)
+        /// <summary>
+        /// Tries to assemble user initials from the Revit UserName
+        /// </summary>
+        /// <param name="uiApp"></param>
+        /// <returns></returns>
+        private string GetUserInitials()
         {
             string userInitials = string.Empty;
             try
             {
-                char first = uiApp.Application.Username.Split('.')[0][0];
-                char second = uiApp.Application.Username.Split('.')[1][0];
+                char first = UIApp.Application.Username.Split('.')[0][0];
+                char second = UIApp.Application.Username.Split('.')[1][0];
                 userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
             }
             catch { }
             return userInitials;
         }
+
+        /// <summary>
+        /// Returns the central model name if this is not Cloud Model, i.e. removes "_userName".
+        /// </summary>
+        /// <returns></returns>
+        public string GetCentralModelName()
+        {
+            return Doc.Title.Replace($"_{UIApp.Application.Username}", "");
+        }
+
         public static void SuspendWarnings(UIControlledApplication application)
         {
             // call our method that will load up our toolbar

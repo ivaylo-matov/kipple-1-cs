@@ -40,6 +40,12 @@ namespace Purge_Rooms_UI
             get { return _enableView; }
             set { _enableView = value; RaisePropertyChanged(() => EnableView); }
         }
+        private bool _enableCoordView;
+        public bool EnableCoordView
+        {
+            get { return _enableCoordView; }
+            set { _enableCoordView = value; RaisePropertyChanged(() => EnableCoordView); }
+        }
         private bool _enableLib;
         public bool EnableLib
         {
@@ -116,6 +122,12 @@ namespace Purge_Rooms_UI
             get { return _isCheckedIFC; }
             set { _isCheckedIFC = value; RaisePropertyChanged(() => IsCheckedIFC); }
         }
+        private bool _isCheckedNWC;
+        public bool IsCheckedNWC
+        {
+            get { return _isCheckedNWC; }
+            set { _isCheckedNWC = value; RaisePropertyChanged(() => IsCheckedNWC); }
+        }
         #endregion
 
         // Meta-data labels
@@ -177,6 +189,7 @@ namespace Purge_Rooms_UI
             EnableCAD = model.EnableCADLinks();
             EnableIMG = model.EnableIMGLinks();
             EnableView = model.EnableViews();
+            EnableCoordView = model.EnableCoordViews();
             EnableLib = model.EnableLibPhase();
             EnableGroup = model.EnableGroups();
 
@@ -209,6 +222,7 @@ namespace Purge_Rooms_UI
                     if (IsCheckedGroups) Model.UngroupGroups();
 
                     if (IsCheckedIFC) Model.ExportIFC(TargetDir, TargetFileName);
+                    if (IsCheckedNWC) Model.ExportNWC(TargetDir, TargetFileName);
 
                     MessageBoxResult result = MessageBox.Show(
                         $"Success! The model is ready in {TargetDir}",
