@@ -79,7 +79,7 @@ namespace Purge_Rooms_UI
         public bool EnableCoordViews()
         {
             List <ElementId> coordViewIds = new FilteredElementCollector(Doc)
-                .OfCategory(BuiltInCategory.OST_Views)
+                .OfClass(typeof(View))
                 .WhereElementIsNotElementType()
                 .Cast<View>()
                 .Where(v => v.Name.ToLower().Contains("_coord"))
@@ -231,6 +231,10 @@ namespace Purge_Rooms_UI
             }
                 
         }
+
+        /// <summary>
+        /// Un-groups all detail and model groups
+        /// </summary>
         public void UngroupGroups()
         {
             using (Transaction tGroup = new Transaction(Doc, "Ungroup all model groups"))
@@ -259,76 +263,34 @@ namespace Purge_Rooms_UI
                 tGroup.Commit();
             }
         }
+
+        /// <summary>
+        /// Removes views and sheets which name does not contain _COORD
+        /// </summary>
         public void RemoveNonCoordViews()
         {
-            List<View> allViews = new FilteredElementCollector(Doc)
+            List<ElementId> nonProtectedViews = new FilteredElementCollector(Doc)
                 .OfClass(typeof(View))                
                 .WhereElementIsNotElementType()
+                .Where(v => v.Name != "IFC Export" && v.Name != "NWC Export" && v != Doc.ActiveView)
                 .Cast<View>()
+                .Select(v => v.Id)
                 .ToList();
 
-            foreach (View view in allViews)
+            using (Transaction tViews = new Transaction(Doc, "Remove Non Coordination Sheets & Views"))
             {
-                ElementId id = view.Id;
-                if (LogCoordViewIds.Contains(id)) Doc.Delete(id);
-                
+                tViews.Start();
+                foreach (ElementId id in nonProtectedViews)
+                {
+                    if (!LogCoordViewIds.Contains(id))
+                    {
+                        try { Doc.Delete(id); }
+                        catch { }
+                    }                    
+                }
+                tViews.Commit();
             }
-
-
-            //    foreach (ViewSheet sheet in nonCoordSheets)
-            //    {
-            //        try
-            //        { Doc.Delete(sheet.Id); }
-            //        catch { }
-            //    }
-
-            //    // delete views
-            //    var nonCoordViews = new FilteredElementCollector(Doc)
-            //        .OfClass(typeof(View))
-            //        .Cast<View>()
-            //        .Where(v => v.Name != "IFC Export")
-            //        .Where(v => v.Name != "Navisworks")
-            //        .ToList();
-
-            //    foreach (View view in nonCoordViews)
-            //    {
-            //        if (!view.LookupParameter("View Folder 1 (View type)").HasValue) continue;
-            //        else
-            //        {
-            //            if (view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-            //            {
-            //                try
-            //                {
-            //                    Doc.Delete(view.Id);
-            //                }
-            //                catch { }
-            //            }
-            //        }
-            //    }
-
-            //    // delete schedules
-            //    var allSchedules = new FilteredElementCollector(Doc)
-            //        .OfCategory(BuiltInCategory.OST_Schedules)
-            //        .WhereElementIsNotElementType()
-            //        .Cast<View>().ToList();
-
-            //    foreach (View sch in allSchedules)
-            //    {
-            //        if (!sch.LookupParameter("View Folder 1 (View type)").HasValue) continue;
-            //        else
-            //        {
-            //            if (sch.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-            //            {
-            //                try
-            //                {
-            //                    Doc.Delete(sch.Id);
-            //                }
-            //                catch { }
-            //            }
-            //        }
-            //    }
         }
-
 
         /// <summary>
         /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.

@@ -217,7 +217,8 @@ namespace Purge_Rooms_UI
                     if (IsCheckedRVT) Model.RemoveRVTLinks();
                     if (IsCheckedCAD) Model.RemoveCADLinks();
                     if (IsCheckedIMG) Model.RemoveIMGLinks();
-                    if (IsCheckedViews) Model.RemoveAllViews();
+                    if (IsCheckedNonCoordViews) Model.RemoveNonCoordViews();
+                    else if (IsCheckedViews) Model.RemoveAllViews();
                     if (IsCheckedLib) Model.RemoveLibPhaseElements();
                     if (IsCheckedGroups) Model.UngroupGroups();
 
