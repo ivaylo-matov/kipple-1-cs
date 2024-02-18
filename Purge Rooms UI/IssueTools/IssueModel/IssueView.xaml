@@ -172,8 +172,8 @@
                 IsChecked="{Binding IsCheckedViews}"
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkCoordViews'
-                Content='Remove non-coordination views and sheets only'
-                IsEnabled="{Binding EnableViews}"
+                Content='Keep coordination views and sheets'
+                IsEnabled="{Binding EnableCoordView}"
                 IsChecked='{Binding IsCheckedNonCoordViews}'
                 Margin='0,5,0,0' />
             <CheckBox x:Name='chkLibraryPhase'

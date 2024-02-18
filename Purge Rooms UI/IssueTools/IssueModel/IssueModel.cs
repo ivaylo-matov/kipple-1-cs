@@ -26,7 +26,7 @@ namespace Purge_Rooms_UI
         private static List<RevitLinkType> LogRVTLinks = new List<RevitLinkType>();
         private static List<ImportInstance> LogCADLinks = new List<ImportInstance>();
         private static List<ImageType> LogIMGLinks = new List<ImageType>();
-        private static List<View> LogViews = new List<View>();
+        private static List<View> LogAllViews = new List<View>();
         private static List<ElementId> LogCoordViewIds = new List<ElementId>();
         private static List<Phase> LogLibPhase = new List<Phase>();
         private static List<Group> LogModelGroups = new List<Group>();
@@ -67,14 +67,14 @@ namespace Purge_Rooms_UI
         }
         public bool EnableViews()
         {
-            LogViews = new FilteredElementCollector(Doc)
+            LogAllViews = new FilteredElementCollector(Doc)
                 .OfClass(typeof(View))
                 .Cast<View>()
                 .Where(v => v.Name != "IFC Export")
-                .Where(v => v.Name != "Navisworks")
+                .Where(v => v.Name != "NWC Export")
                 .Where(v => v.Id != Doc.ActiveView.Id)
                 .ToList();
-            return LogViews.Count > 0;
+            return LogAllViews.Count > 0;
         }
         public bool EnableCoordViews()
         {
@@ -165,12 +165,16 @@ namespace Purge_Rooms_UI
                 tIMG.Commit();
             }
         }
-        public void RemoveViews()
+
+        /// <summary>
+        /// Removes all views and sheets from LogAllViews
+        /// </summary>
+        public void RemoveAllViews()
         {
             using (Transaction tViews = new Transaction(Doc, "Remove Sheets & Views"))
             {
                 tViews.Start();
-                foreach (var i in LogViews)
+                foreach (var i in LogAllViews)
                 {
                     try { Doc.Delete(i.Id); }
                     catch { }
@@ -257,68 +261,74 @@ namespace Purge_Rooms_UI
         }
         public void RemoveNonCoordViews()
         {
-            // delete sheets
-            var nonCoordSheets = new FilteredElementCollector(Doc)
-                .OfClass(typeof(ViewSheet))
-                .Cast<ViewSheet>()
-                .Where(s => !s.SheetNumber.Contains("Project Information"))
-                .Where(s => !s.LookupParameter("Sheet Phase").AsString().Contains("COORD"))
-                .ToList();
-
-            foreach (ViewSheet sheet in nonCoordSheets)
-            {
-                try
-                { Doc.Delete(sheet.Id); }
-                catch { }
-            }
-
-            // delete views
-            var nonCoordViews = new FilteredElementCollector(Doc)
-                .OfClass(typeof(View))
-                .Cast<View>()
-                .Where(v => v.Name != "IFC Export")
-                .Where(v => v.Name != "Navisworks")
-                .ToList();
-
-            foreach (View view in nonCoordViews)
-            {
-                if (!view.LookupParameter("View Folder 1 (View type)").HasValue) continue;
-                else
-                {
-                    if (view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-                    {
-                        try
-                        {
-                            Doc.Delete(view.Id);
-                        }
-                        catch { }
-                    }
-                }
-            }
-
-            // delete schedules
-            var allSchedules = new FilteredElementCollector(Doc)
-                .OfCategory(BuiltInCategory.OST_Schedules)
+            List<View> allViews = new FilteredElementCollector(Doc)
+                .OfClass(typeof(View))                
                 .WhereElementIsNotElementType()
-                .Cast<View>().ToList();
+                .Cast<View>()
+                .ToList();
 
-            foreach (View sch in allSchedules)
+            foreach (View view in allViews)
             {
-                if (!sch.LookupParameter("View Folder 1 (View type)").HasValue) continue;
-                else
-                {
-                    if (sch.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
-                    {
-                        try
-                        {
-                            Doc.Delete(sch.Id);
-                        }
-                        catch { }
-                    }
-                }
+                ElementId id = view.Id;
+                if (LogCoordViewIds.Contains(id)) Doc.Delete(id);
+                
             }
+
+
+            //    foreach (ViewSheet sheet in nonCoordSheets)
+            //    {
+            //        try
+            //        { Doc.Delete(sheet.Id); }
+            //        catch { }
+            //    }
+
+            //    // delete views
+            //    var nonCoordViews = new FilteredElementCollector(Doc)
+            //        .OfClass(typeof(View))
+            //        .Cast<View>()
+            //        .Where(v => v.Name != "IFC Export")
+            //        .Where(v => v.Name != "Navisworks")
+            //        .ToList();
+
+            //    foreach (View view in nonCoordViews)
+            //    {
+            //        if (!view.LookupParameter("View Folder 1 (View type)").HasValue) continue;
+            //        else
+            //        {
+            //            if (view.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+            //            {
+            //                try
+            //                {
+            //                    Doc.Delete(view.Id);
+            //                }
+            //                catch { }
+            //            }
+            //        }
+            //    }
+
+            //    // delete schedules
+            //    var allSchedules = new FilteredElementCollector(Doc)
+            //        .OfCategory(BuiltInCategory.OST_Schedules)
+            //        .WhereElementIsNotElementType()
+            //        .Cast<View>().ToList();
+
+            //    foreach (View sch in allSchedules)
+            //    {
+            //        if (!sch.LookupParameter("View Folder 1 (View type)").HasValue) continue;
+            //        else
+            //        {
+            //            if (sch.LookupParameter("View Folder 1 (View type)").AsString().Contains("COORD"))
+            //            {
+            //                try
+            //                {
+            //                    Doc.Delete(sch.Id);
+            //                }
+            //                catch { }
+            //            }
+            //        }
+            //    }
         }
-        
+
 
         /// <summary>
         /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.
@@ -585,6 +595,7 @@ namespace Purge_Rooms_UI
             return viewIdsToDelete;
         }
  
+        //TODO: DOES NOT WORK!!!!
         //TODO: Allow the user to modify at least some of the settings
         /// <summary>
         /// Exports IFC file with predefined settings
@@ -637,6 +648,7 @@ namespace Purge_Rooms_UI
             Doc.Export(dirPath, fileName, ifcOpt);
         }
 
+        //TODO: DOE NOT WORK!!!
         /// <summary>
         /// Exports NWC file with predefined settings
         /// </summary>
