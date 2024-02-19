@@ -271,7 +271,9 @@
     <Resource Include="Resources\ACGLogo.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\kipl_black.ico" />
+    <Content Include="Icon\KiplBlack.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

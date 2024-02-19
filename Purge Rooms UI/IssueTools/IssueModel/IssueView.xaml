@@ -15,7 +15,7 @@
         Width='460'
         Height='700'
         ResizeMode="NoResize"
-        Icon="/Purge_Rooms_UI;Component/Resources/kipl_black.ico">
+        Icon="/Icon/CilpBlack.ico">
 
 
 
@@ -96,10 +96,9 @@
         
 <!--User Message-->
         <StackPanel Grid.Row="1"                    
-    Orientation='Vertical'
-    HorizontalAlignment='Left'          
-    Margin='10,0,10,0'>
-
+            Orientation='Vertical'
+            HorizontalAlignment='Left'          
+            Margin='10,0,10,0'>
             <Separator Margin='5,0,5,0' Width='430'/>
 
             <Label Content='! Please make sure Splash Page is active. Current active view :' FontSize="12"/>
@@ -214,7 +213,7 @@
             
         </StackPanel>
         
-        <!--Run Button-->
+<!--Run Button-->
         <StackPanel Grid.Row="4" Height="50">
             <Button Name='Run'
                 Content='Run'
@@ -231,7 +230,7 @@
                 CommandParameter="{Binding ElementName=IssueModelWindow}"/>                
         </StackPanel>
         
-        <!--Style="{StaticResource TriggerStyle}"-->
+<!--Style="{StaticResource TriggerStyle}"-->
 
     </Grid>
 </Window>
