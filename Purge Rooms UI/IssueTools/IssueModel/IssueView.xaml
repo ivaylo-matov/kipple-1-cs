@@ -7,7 +7,7 @@
         xmlns:userControls="clr-namespace:Purge_Rooms_UI.IssueTools.IssueModel.UserControls"
         xmlns:local="clr-namespace:Purge_Rooms_UI"
         WindowStartupLocation='CenterScreen'
-        Title='Issue Model'
+        Title=' '
         Foreground="Black"
         FontFamily="Calibri"
         FontSize="14"
@@ -15,7 +15,7 @@
         Width='460'
         Height='700'
         ResizeMode="NoResize"
-        Icon="/Icon/CilpBlack.ico">
+        Icon="C:\Users\ivayl\Git\kipple-1-cs\Purge Rooms UI\Resources\KiplBlack.ico">
 
 
 
@@ -73,7 +73,15 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0"/>
-        <Grid Grid.Row="1" Background="#dcdcdc"/>
+        <Grid Grid.Row="1" Background="#F0F0F0">
+            <Border
+                BorderBrush="Black"
+                BorderThickness="1"
+                Margin="10,0,12,0"
+                CornerRadius="10"
+                Background="#FFFBCC">                
+            </Border>
+        </Grid>
         <Grid Grid.Row="2" Background="#F0F0F0"/>
         <Grid Grid.Row="3" Background="#F0F0F0"/>
         <Grid Grid.Row="4" Background="#F0F0F0"/>
@@ -99,17 +107,15 @@
             Orientation='Vertical'
             HorizontalAlignment='Left'          
             Margin='10,0,10,0'>
-            <Separator Margin='5,0,5,0' Width='430'/>
 
-            <Label Content='! Please make sure Splash Page is active. Current active view :' FontSize="12"/>
-            <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12" />
+            <Label Content='! Please make sure Splash Page is active. Current active view :'
+                   FontSize="12" Height="23" Margin="3,1,0,0"/>
+            <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12" Height="23" Margin="3,0,0,5"/>
         </StackPanel>
 
 
 <!--Issue Data-->
-        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10,0,10,0">
-            
-            <Separator Margin='5,0,5,10'/>
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10,10,10,0">
             
             <StackPanel Orientation='Horizontal' HorizontalAlignment='Left'>
                 <Label Content='Issued to :' Width='150' />
