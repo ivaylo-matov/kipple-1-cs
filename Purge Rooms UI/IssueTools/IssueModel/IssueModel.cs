@@ -1,4 +1,7 @@
-﻿using Autodesk.Revit.DB;
+﻿// Ignore Spelling: Coord
+
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Analysis;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using System;
@@ -33,12 +36,6 @@ namespace Purge_Rooms_UI
 
         public static string TargetFolderNotFoundMessage = "Not found! Please navigate to target folder.";
 
-
-        public void Run()
-        {
-
-        }
-
         #region Enable/Disable CheckBoxes
         // Pre-process elements
         public bool EnableRVTLinks()
@@ -72,7 +69,7 @@ namespace Purge_Rooms_UI
                 .Cast<View>()
                 .Where(v => v.Name != "IFC Export")
                 .Where(v => v.Name != "NWC Export")
-                .Where(v => v.Id != Doc.ActiveView.Id)
+                .Where(v => v.Id != GetSplachScreen().Id)
                 .ToList();
             return LogAllViews.Count > 0;
         }
@@ -90,7 +87,7 @@ namespace Purge_Rooms_UI
                 .OfClass(typeof(ViewSheet))
                 .Cast<ViewSheet>()
                 .Where(s => s.Name.ToLower().Contains("_coord"))
-                .Where(s => s != Doc.ActiveView)
+                .Where(s => s != GetSplachScreen())
                 .Select(s => s.Id)
                 .ToList();
 
@@ -126,49 +123,185 @@ namespace Purge_Rooms_UI
         }
         #endregion
 
-        public void RemoveRVTLinks()
+        #region Update / Sync / Save
+        /// <summary>
+        /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.
+        /// It also looks for the project directory in Project Information.
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<string, string> CollectCurrentMetaData()
         {
-            using (Transaction tRVT = new Transaction(Doc, "Remove RVT links"))
+            ViewSheet splashScr = GetSplachScreen();
+
+            //TODO: this breaks if the active view is not a SHEET. Handle this.
+            string approvedByValue = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).AsValueString();
+            if (approvedByValue == "Approver") approvedByValue = "";
+
+            ProjectInfo info = new FilteredElementCollector(Doc)
+                .OfClass(typeof(ProjectInfo))
+                .Cast<ProjectInfo>()
+                .FirstOrDefault();
+
+            string targetDir = TargetFolderNotFoundMessage;  
+
+            if (info.LookupParameter("Project Directory") != null)
             {
-                tRVT.Start();
-                foreach (var i in LogRVTLinks)
-                {
-                    try { Doc.Delete(i.Id); }
-                    catch { }
-                }
-                tRVT.Commit();
-            }                
-        }
-        public void RemoveCADLinks()
-        {
-            using (Transaction tCAD = new Transaction(Doc, "Remove CAD links"))
+                string projectDir = info.LookupParameter("Project Directory").AsValueString();
+                targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
+            }
+
+            ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+            // try to get the data from the latest revision
+            if (currentRevs.Count() > 0)
             {
-                tCAD.Start();
-                foreach (var i in LogCADLinks)
-                {
-                    try { Doc.Delete(i.Id); }
-                    catch { }
-                }
-                tCAD.Commit();
-            }            
-        }
-        public void RemoveIMGLinks()
-        {
-            using (Transaction tIMG = new Transaction(Doc, "Remove Image & PDF links"))
+                Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
+
+                return new Dictionary<string, string> {
+                { "IssuedTo", lastRev.IssuedTo },
+                { "IssuedBy", lastRev.IssuedBy },
+                { "ApprovedBy", approvedByValue },
+                { "RevDescription", lastRev.Description },
+                { "TargetDir", targetDir},
+                { "TargetFileName", GetCentralModelName()}
+                };
+            }
+            else
             {
-                tIMG.Start();
-                foreach (var i in LogIMGLinks)
-                {
-                    try { Doc.Delete(i.Id); }
-                    catch { }
-                }
-                tIMG.Commit();
+                return new Dictionary<string, string> {
+                { "IssuedTo", "" },
+                { "IssuedBy", GetUserInitials() },
+                { "ApprovedBy", "" },
+                { "RevDescription", "" },
+                { "TargetDir", targetDir},
+                { "TargetFileName", GetCentralModelName()}
+                };
             }
         }
+        private string GetUserInitials()
+        {
+            string userInitials = string.Empty;
+            try
+            {
+                char first = UIApp.Application.Username.Split('.')[0][0];
+                char second = UIApp.Application.Username.Split('.')[1][0];
+                userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
+            }
+            catch { }
+            return userInitials;
+        }
+        public string GetCentralModelName()
+        {
+            return Doc.Title.Replace($"_{UIApp.Application.Username}", "");
+        }
+        public void UpdateMetaData(string revDescription, string issuedBy, string issuedTo, string approvedBy)
+        {
+            using (Transaction tMeta = new Transaction(Doc, "Update metadata"))
+            {
+                tMeta.Start();
+                try
+                {
+                    ViewSheet splashScr = GetSplachScreen();
 
-        /// <summary>
-        /// Removes all views and sheets from LogAllViews
-        /// </summary>
+                    Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+                    ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+
+                    Revision newRev = Revision.Create(Doc);
+                    newRev.Description = revDescription;
+                    newRev.IssuedBy = issuedBy;
+                    newRev.IssuedTo = issuedTo;
+                    newRev.RevisionDate = DateTime.Now.ToString("dd.MM.yy");
+
+                    currentRevs.Add(newRev.Id);
+                    splashScr.SetAdditionalRevisionIds(currentRevs);
+                    approvedByParam.Set(approvedBy);
+                    splashScr.get_Parameter(BuiltInParameter.SHEET_DRAWN_BY).Set(issuedBy);
+                    splashScr.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE).Set(DateTime.Now.ToString("dd.MM.yy"));
+                }
+                catch (Exception ex)
+                {
+                    TaskDialog.Show("Error!", $"Metadata could not be updated.{Environment.NewLine} {ex}");
+                }
+                tMeta.Commit();
+            }
+        }
+        public void SyncCloudModel()
+        {
+            TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
+            RelinquishOptions rOpt = new RelinquishOptions(true);
+            rOpt.StandardWorksets = true;
+            rOpt.ViewWorksets = true;
+            rOpt.FamilyWorksets = true;
+            rOpt.UserWorksets = true;
+            rOpt.CheckedOutElements = true;
+            SynchronizeWithCentralOptions syncOpt = new SynchronizeWithCentralOptions();
+            syncOpt.SetRelinquishOptions(rOpt);
+            syncOpt.Compact = false;
+            syncOpt.SaveLocalBefore = true;
+            syncOpt.SaveLocalAfter = true;
+            Doc.SynchronizeWithCentral(tOpt, syncOpt);
+        }
+        public void SaveIssueModel(string targetDir, string fileName)
+        {
+            if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+            string filePath = $"{targetDir}\\{fileName}.rvt";
+            
+            WorksharingSaveAsOptions wsOpt = new WorksharingSaveAsOptions();
+
+            SaveAsOptions sOpt = new SaveAsOptions();
+            sOpt.SetWorksharingOptions(wsOpt);
+            sOpt.OverwriteExistingFile = true;
+            sOpt.MaximumBackups = 1;
+            sOpt.Compact = false;
+            Doc.SaveAs(filePath, sOpt);
+
+            TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
+            RelinquishOptions rOpt = new RelinquishOptions(true);
+            rOpt.StandardWorksets = true;
+            rOpt.ViewWorksets = true;
+            rOpt.FamilyWorksets = true;
+            rOpt.UserWorksets = true;
+            rOpt.CheckedOutElements = true;
+
+            SynchronizeWithCentralOptions syncOpt = new SynchronizeWithCentralOptions();
+            syncOpt.SetRelinquishOptions(rOpt);
+            syncOpt.Compact = false;
+            syncOpt.SaveLocalBefore = false;
+            syncOpt.SaveLocalAfter = false;
+
+            Doc.SynchronizeWithCentral(tOpt, syncOpt);
+        }
+
+        // Tries to get the Splash Screen. Users should be asked to have it as active view
+        // ...but if they click on the Project Browser or Properties Palette, the core will return
+        // ...exception. In that case, this method will return the first open view of the document
+        // ...in hope that this indeed is the Splash Screen
+        private ViewSheet GetSplachScreen()
+        {
+            ViewSheet splashScr = null;
+            var uiViews = UIApp.ActiveUIDocument.GetOpenUIViews();
+
+            if (Doc.ActiveView != null && Doc.ActiveView is ViewSheet) splashScr = Doc.ActiveView as ViewSheet;
+            else
+            {
+                splashScr = uiViews.Select(v => Doc.GetElement(v.ViewId) as View)
+                .Where(v => v != null && v is ViewSheet)
+                .Cast<ViewSheet>()
+                .FirstOrDefault();
+            }
+            return splashScr;
+        }
+        public string ReportActiveView()
+        {
+            if (Doc.ActiveView is ViewSheet activeSheet)
+            {
+                return $"{activeSheet.SheetNumber} - {activeSheet.Name}";
+            }
+            return Doc.ActiveView?.Name;
+        }
+        #endregion
+
+        #region Clean
+
         public void RemoveAllViews()
         {
             using (Transaction tViews = new Transaction(Doc, "Remove Sheets & Views"))
@@ -178,6 +311,30 @@ namespace Purge_Rooms_UI
                 {
                     try { Doc.Delete(i.Id); }
                     catch { }
+                }
+                tViews.Commit();
+            }
+        }
+        public void RemoveNonCoordViews()
+        {
+            List<ElementId> nonProtectedViews = new FilteredElementCollector(Doc)
+                .OfClass(typeof(View))
+                .WhereElementIsNotElementType()
+                .Where(v => v.Name != "IFC Export" && v.Name != "NWC Export" && v != GetSplachScreen())
+                .Cast<View>()
+                .Select(v => v.Id)
+                .ToList();
+
+            using (Transaction tViews = new Transaction(Doc, "Remove Non Coordination Sheets & Views"))
+            {
+                tViews.Start();
+                foreach (ElementId id in nonProtectedViews)
+                {
+                    if (!LogCoordViewIds.Contains(id))
+                    {
+                        try { Doc.Delete(id); }
+                        catch { }
+                    }
                 }
                 tViews.Commit();
             }
@@ -229,12 +386,8 @@ namespace Purge_Rooms_UI
 
                 tLib.Commit();
             }
-                
-        }
 
-        /// <summary>
-        /// Un-groups all detail and model groups
-        /// </summary>
+        }
         public void UngroupGroups()
         {
             using (Transaction tGroup = new Transaction(Doc, "Ungroup all model groups"))
@@ -263,197 +416,103 @@ namespace Purge_Rooms_UI
                 tGroup.Commit();
             }
         }
-
-        /// <summary>
-        /// Removes views and sheets which name does not contain _COORD
-        /// </summary>
-        public void RemoveNonCoordViews()
+        public void RemoveRVTLinks()
         {
-            List<ElementId> nonProtectedViews = new FilteredElementCollector(Doc)
-                .OfClass(typeof(View))                
-                .WhereElementIsNotElementType()
-                .Where(v => v.Name != "IFC Export" && v.Name != "NWC Export" && v != Doc.ActiveView)
-                .Cast<View>()
-                .Select(v => v.Id)
-                .ToList();
-
-            using (Transaction tViews = new Transaction(Doc, "Remove Non Coordination Sheets & Views"))
+            using (Transaction tRVT = new Transaction(Doc, "Remove RVT links"))
             {
-                tViews.Start();
-                foreach (ElementId id in nonProtectedViews)
+                tRVT.Start();
+                foreach (var i in LogRVTLinks)
                 {
-                    if (!LogCoordViewIds.Contains(id))
+                    try { Doc.Delete(i.Id); }
+                    catch { }
+                }
+                tRVT.Commit();
+            }
+        }
+        public void RemoveCADLinks()
+        {
+            using (Transaction tCAD = new Transaction(Doc, "Remove CAD links"))
+            {
+                tCAD.Start();
+                foreach (var i in LogCADLinks)
+                {
+                    try { Doc.Delete(i.Id); }
+                    catch { }
+                }
+                tCAD.Commit();
+            }
+        }
+        public void RemoveIMGLinks()
+        {
+            using (Transaction tIMG = new Transaction(Doc, "Remove Image & PDF links"))
+            {
+                tIMG.Start();
+                foreach (var i in LogIMGLinks)
+                {
+                    try { Doc.Delete(i.Id); }
+                    catch { }
+                }
+                tIMG.Commit();
+            }
+        }
+        public void PurgeModel()
+        {
+            PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
+            var allRulesList = perfAd.GetAllRuleIds();
+            var rulesToExecute = new List<PerformanceAdviserRuleId>();
+            foreach (PerformanceAdviserRuleId r in allRulesList)
+            {
+                if (perfAd.GetRuleName(r).Equals("Project contains unused families and types"))
+                {
+                    rulesToExecute.Add(r);
+                }
+            }
+
+            using (Transaction tPurge = new Transaction(Doc, "Purge"))
+            {
+                tPurge.Start();
+
+                for (int i = 0; i < 3; i++)
+                {
+                    IList<FailureMessage> failMessages = perfAd.ExecuteRules(Doc, rulesToExecute);
+                    if (failMessages.Count() == 0) return;
+
+                    ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
+                    foreach (ElementId id in failingElementIds)
                     {
-                        try { Doc.Delete(id); }
+                        try
+                        {
+                            Doc.Delete(id);
+                        }
                         catch { }
-                    }                    
+                    }
                 }
-                tViews.Commit();
-            }
-        }
-
-        /// <summary>
-        /// Looks at the Splash Page, which should be the active view and returns the data from the latest revision.
-        /// It also looks for the project directory in Project Information.
-        /// </summary>
-        /// <returns></returns>
-        public Dictionary<string, string> CollectCurrentMetaData()
-        {
-            ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-            //TODO: this breaks if the active view is not a SHEET. Handle this.
-            string approvedByValue = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY).AsValueString();
-            if (approvedByValue == "Approver") approvedByValue = "";
-
-            ProjectInfo info = new FilteredElementCollector(Doc)
-                .OfClass(typeof(ProjectInfo))
-                .Cast<ProjectInfo>()
-                .FirstOrDefault();
-
-            string targetDir = TargetFolderNotFoundMessage;  
-
-            if (info.LookupParameter("Project Directory") != null)
-            {
-                string projectDir = info.LookupParameter("Project Directory").AsValueString();
-                targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
-            }
-
-            ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
-            // try to get the data from the latest revision
-            if (currentRevs.Count() > 0)
-            {
-                Revision lastRev = Doc.GetElement(currentRevs.Last()) as Revision;
-
-                return new Dictionary<string, string> {
-                { "IssuedTo", lastRev.IssuedTo },
-                { "IssuedBy", lastRev.IssuedBy },
-                { "ApprovedBy", approvedByValue },
-                { "RevDescription", lastRev.Description },
-                { "TargetDir", targetDir},
-                { "TargetFileName", GetCentralModelName()}
-                };
-            }
-            else
-            {
-                return new Dictionary<string, string> {
-                { "IssuedTo", "" },
-                { "IssuedBy", GetUserInitials() },
-                { "ApprovedBy", "" },
-                { "RevDescription", "" },
-                { "TargetDir", targetDir},
-                { "TargetFileName", GetCentralModelName()}
-                };
-            }
-        }
-
-        /// <summary>
-        /// Pushed the revised metadata to the Splash Page, which should be the active view.
-        /// </summary>
-        /// <param name="revDescription"></param>
-        /// <param name="issuedBy"></param>
-        /// <param name="issuedTo"></param>
-        /// <param name="approvedBy"></param>
-        public void UpdateMetaData(string revDescription, string issuedBy, string issuedTo, string approvedBy)
-        {
-            using (Transaction tMeta = new Transaction(Doc, "Update metadata"))
-            {
-                tMeta.Start();
-                try
+                Doc.Regenerate();
+                for (int i = 0; i < 3; i++)
                 {
-                    ViewSheet splashScr = Doc.ActiveView as ViewSheet;
-                    Parameter approvedByParam = splashScr.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
-                    ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
+                    IList<FailureMessage> failMessages = perfAd.ExecuteRules(Doc, rulesToExecute);
+                    if (failMessages.Count() == 0) return;
 
-                    Revision newRev = Revision.Create(Doc);
-                    newRev.Description = revDescription;
-                    newRev.IssuedBy = issuedBy;
-                    newRev.IssuedTo = issuedTo;
-                    newRev.RevisionDate = DateTime.Now.ToString("dd.MM.yy");
+                    ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
+                    foreach (ElementId id in failingElementIds)
+                    {
+                        try
+                        {
+                            Doc.Delete(id);
+                        }
+                        catch { }
+                    }
+                }
 
-                    currentRevs.Add(newRev.Id);
-                    splashScr.SetAdditionalRevisionIds(currentRevs);
-                    approvedByParam.Set(approvedBy);
-                    splashScr.get_Parameter(BuiltInParameter.SHEET_DRAWN_BY).Set(issuedBy);
-                    splashScr.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE).Set(DateTime.Now.ToString("dd.MM.yy"));
-                }
-                catch (Exception ex)
-                {
-                    TaskDialog.Show("Error!", $"Metadata could not be updated.{Environment.NewLine} {ex}");
-                }
-                tMeta.Commit();
+                tPurge.Commit();
             }
         }
 
-        /// <summary>
-        /// Synchronizes the local model. Pushes the updated metadata to the central model.
-        /// </summary>
-        public void SyncCloudModel()
-        {
-            TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
-            RelinquishOptions rOpt = new RelinquishOptions(true);
-            rOpt.StandardWorksets = true;
-            rOpt.ViewWorksets = true;
-            rOpt.FamilyWorksets = true;
-            rOpt.UserWorksets = true;
-            rOpt.CheckedOutElements = true;
-            SynchronizeWithCentralOptions syncOpt = new SynchronizeWithCentralOptions();
-            syncOpt.SetRelinquishOptions(rOpt);
-            syncOpt.Compact = false;
-            syncOpt.SaveLocalBefore = true;
-            syncOpt.SaveLocalAfter = true;
-            Doc.SynchronizeWithCentral(tOpt, syncOpt);
-        }
-
-        /// <summary>
-        /// Saves a clean version of the model in a given location.
-        /// </summary>
-        /// <param name="targetDir"></param>
-        public void SaveIssueModel(string targetDir, string fileName)
-        {
-            if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-            string filePath = $"{targetDir}\\{fileName}.rvt";
-            
-            WorksharingSaveAsOptions wsOpt = new WorksharingSaveAsOptions();
-
-            SaveAsOptions sOpt = new SaveAsOptions();
-            sOpt.SetWorksharingOptions(wsOpt);
-            sOpt.OverwriteExistingFile = true;
-            sOpt.MaximumBackups = 1;
-            sOpt.Compact = false;
-            Doc.SaveAs(filePath, sOpt);
-
-            TransactWithCentralOptions tOpt = new TransactWithCentralOptions();
-            RelinquishOptions rOpt = new RelinquishOptions(true);
-            rOpt.StandardWorksets = true;
-            rOpt.ViewWorksets = true;
-            rOpt.FamilyWorksets = true;
-            rOpt.UserWorksets = true;
-            rOpt.CheckedOutElements = true;
-
-            SynchronizeWithCentralOptions syncOpt = new SynchronizeWithCentralOptions();
-            syncOpt.SetRelinquishOptions(rOpt);
-            syncOpt.Compact = false;
-            syncOpt.SaveLocalBefore = false;
-            syncOpt.SaveLocalAfter = false;
-
-            Doc.SynchronizeWithCentral(tOpt, syncOpt);
-        }
-        
-        public void SelectFolder(string folderPath)
-        {
-            WinForms.FolderBrowserDialog dialog = new WinForms.FolderBrowserDialog();
-            dialog.SelectedPath = folderPath;
-            dialog.ShowDialog();
-        }       
+        #endregion
 
 
- 
-        //TODO: DOES NOT WORK!!!!
+        #region Export
         //TODO: Allow the user to modify at least some of the settings
-        /// <summary>
-        /// Exports IFC file with predefined settings
-        /// </summary>
-        /// <param name="dirPath"></param>
-        /// <param name="fileName"></param>
         public void ExportIFC(string dirPath, string fileName)
         {
             ProjectInfo prjInfo = new FilteredElementCollector(Doc)
@@ -474,7 +533,6 @@ namespace Purge_Rooms_UI
             ifcOpt.ExportBaseQuantities = false;
             // if there is no IFC Export view, all elements in the model will be exported
             if (IFCview != null) ifcOpt.FilterViewId = IFCview.Id;
-
 
             ifcOpt.AddOption("ExportInternalRevitPropertySets", "false");
             ifcOpt.AddOption("ExportIFCCommonPropertySets", "true");
@@ -497,15 +555,16 @@ namespace Purge_Rooms_UI
             ifcOpt.AddOption("TessellationLevelOfDetail", "0,5");
             ifcOpt.AddOption("ExportUserDefinedPsets", "false");
             ifcOpt.AddOption("SitePlacement", "0");
-            Doc.Export(dirPath, fileName, ifcOpt);
+
+            using (Transaction tIFC = new Transaction(Doc, "Export IFC"))
+            {
+                tIFC.Start();
+                Doc.Export(dirPath, fileName, ifcOpt);
+                tIFC.Commit();
+            }                
         }
 
-        //TODO: DOE NOT WORK!!!
-        /// <summary>
-        /// Exports NWC file with predefined settings
-        /// </summary>
-        /// <param name="dirPath"></param>
-        /// <param name="fileName"></param>
+        //TODO: Note that NWC Export Utility must be installed
         public void ExportNWC(string dirPath, string fileName)
         {
             ProjectInfo prjInfo = new FilteredElementCollector(Doc)
@@ -527,63 +586,13 @@ namespace Purge_Rooms_UI
             nwcOpt.ConvertElementProperties = true;
             nwcOpt.ExportRoomAsAttribute = true;
             nwcOpt.ExportRoomGeometry = false;
+
             Doc.Export(dirPath, fileName, nwcOpt);
         }
-        public static void PurgeModel(Document doc)
-        {
-            PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
-            var allRulesList = perfAd.GetAllRuleIds();
-            var rulesToExecute = new List<PerformanceAdviserRuleId>();
-            foreach (PerformanceAdviserRuleId r in allRulesList)
-            {
-                if (perfAd.GetRuleName(r).Equals("Project contains unused families and types"))
-                {
-                    rulesToExecute.Add(r);
-                }
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                IList<FailureMessage> failMessages = perfAd.ExecuteRules(doc, rulesToExecute);
-                if (failMessages.Count() == 0) return;
+        #endregion
 
-                ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
-                foreach (ElementId id in failingElementIds)
-                {
-                    try
-                    {
-                        doc.Delete(id);
-                    }
-                    catch { }
-                }
-            }
-        }
+        
 
-        /// <summary>
-        /// Tries to assemble user initials from the Revit UserName
-        /// </summary>
-        /// <param name="uiApp"></param>
-        /// <returns></returns>
-        private string GetUserInitials()
-        {
-            string userInitials = string.Empty;
-            try
-            {
-                char first = UIApp.Application.Username.Split('.')[0][0];
-                char second = UIApp.Application.Username.Split('.')[1][0];
-                userInitials = string.Concat(char.ToUpper(first), char.ToUpper(second));
-            }
-            catch { }
-            return userInitials;
-        }
-
-        /// <summary>
-        /// Returns the central model name if this is not Cloud Model, i.e. removes "_userName".
-        /// </summary>
-        /// <returns></returns>
-        public string GetCentralModelName()
-        {
-            return Doc.Title.Replace($"_{UIApp.Application.Username}", "");
-        }
 
         public static void SuspendWarnings(UIControlledApplication application)
         {

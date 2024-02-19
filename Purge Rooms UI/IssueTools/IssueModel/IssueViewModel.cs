@@ -174,6 +174,12 @@ namespace Purge_Rooms_UI
             get { return _targetFileName; }
             set { _targetFileName = value; RaisePropertyChanged(() => TargetFileName); }
         }
+        private string _activeView;
+        public string ActiveView
+        {
+            get { return _activeView; }
+            set { _activeView = value; RaisePropertyChanged(() => ActiveView); }
+        }
 
 
 
@@ -194,6 +200,8 @@ namespace Purge_Rooms_UI
             EnableGroup = model.EnableGroups();
 
             // Set initial revision parameter values
+            ActiveView = model.ReportActiveView();
+
             IssuedTo = model.CollectCurrentMetaData()["IssuedTo"];
             IssuedBy = model.CollectCurrentMetaData()["IssuedBy"];
             ApprovedBy = model.CollectCurrentMetaData()["ApprovedBy"];
@@ -221,6 +229,8 @@ namespace Purge_Rooms_UI
                     else if (IsCheckedViews) Model.RemoveAllViews();
                     if (IsCheckedLib) Model.RemoveLibPhaseElements();
                     if (IsCheckedGroups) Model.UngroupGroups();
+
+                    Model.PurgeModel();
 
                     if (IsCheckedIFC) Model.ExportIFC(TargetDir, TargetFileName);
                     if (IsCheckedNWC) Model.ExportNWC(TargetDir, TargetFileName);

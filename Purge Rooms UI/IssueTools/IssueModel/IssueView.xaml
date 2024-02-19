@@ -13,7 +13,7 @@
         FontSize="14"
         FontWeight="Light"
         Width='460'
-        Height='640'
+        Height='700'
         ResizeMode="NoResize">
 
 
@@ -67,13 +67,15 @@
             <RowDefinition Height="90"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="70"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0"/>
-        <Grid Grid.Row="1" Background="#F0F0F0"/>
+        <Grid Grid.Row="1" Background="#dcdcdc"/>
         <Grid Grid.Row="2" Background="#F0F0F0"/>
         <Grid Grid.Row="3" Background="#F0F0F0"/>
+        <Grid Grid.Row="4" Background="#F0F0F0"/>
 
 <!--Header-->
         <StackPanel Grid.Row="0"                    
@@ -91,8 +93,21 @@
                 Foreground="DarkGray"/>
         </StackPanel>
         
+<!--User Message-->
+        <StackPanel Grid.Row="1"                    
+    Orientation='Vertical'
+    HorizontalAlignment='Left'          
+    Margin='10,0,10,0'>
+
+            <Separator Margin='5,0,5,0' Width='430'/>
+
+            <Label Content='! Please make sure Splash Page is active. Current active view :' FontSize="12"/>
+            <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12" />
+        </StackPanel>
+
+
 <!--Issue Data-->
-        <StackPanel Grid.Row="1" Grid.Column="0" Margin="10,0,10,0">
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10,0,10,0">
             
             <Separator Margin='5,0,5,10'/>
             
@@ -150,7 +165,7 @@
             
         </StackPanel>
 <!--CheckBoxes-->
-        <StackPanel Grid.Row="2" Margin="15,5,10,0">
+        <StackPanel Grid.Row="3" Margin="15,5,10,0">
             <CheckBox x:Name='chkRVTlinks'
                 Content='Remove all RVT links'
                 IsEnabled="{Binding EnableRVT}"
@@ -199,7 +214,7 @@
         </StackPanel>
         
         <!--Run Button-->
-        <StackPanel Grid.Row="3" Height="50">
+        <StackPanel Grid.Row="4" Height="50">
             <Button Name='Run'
                 Content='Run'
                 FontWeight="Medium"
