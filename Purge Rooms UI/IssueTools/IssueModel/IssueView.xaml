@@ -13,7 +13,7 @@
         FontSize="14"
         FontWeight="Light"
         Width='460'
-        Height='700'
+        Height='725'
         ResizeMode="NoResize"
         Icon="C:\Users\ivayl\Git\kipple-1-cs\Purge Rooms UI\Resources\KiplBlack.ico">
 
@@ -75,7 +75,7 @@
         <Grid Grid.Row="0"/>
         <Grid Grid.Row="1" Background="#F0F0F0">
             <Border
-                BorderBrush="Black"
+                BorderBrush="#7d7d7d"
                 BorderThickness="1"
                 Margin="10,0,12,0"
                 CornerRadius="10"
@@ -108,9 +108,10 @@
             HorizontalAlignment='Left'          
             Margin='10,0,10,0'>
 
-            <Label Content='! Please make sure Splash Page is active. Current active view :'
-                   FontSize="12" Height="23" Margin="3,1,0,0"/>
-            <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12" Height="23" Margin="3,0,0,5"/>
+            <Label Content='! Please make sure the Splash Page is active. Current active view :'
+                   FontSize="12" Height="23" Margin="3,1,0,0" Foreground="#4b4b4b"/>
+            <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12"
+                   Height="23" Margin="3,0,0,5" Foreground="#4b4b4b"/>
         </StackPanel>
 
 
@@ -172,11 +173,16 @@
         </StackPanel>
 <!--CheckBoxes-->
         <StackPanel Grid.Row="3" Margin="15,5,10,0">
+            <CheckBox x:Name='chkCleanAll'
+                Content='Remove all !'
+                IsEnabled="True"
+                IsChecked ="{Binding IsCheckedAll}"
+                Margin='0,5,0,10'/>
             <CheckBox x:Name='chkRVTlinks'
                 Content='Remove all RVT links'
                 IsEnabled="{Binding EnableRVT}"
                 IsChecked="{Binding IsCheckedRVT}"
-                Margin='0,5,0,0' />
+                Margin='0,5,0,0'/>
             <CheckBox x:Name='chkCADlinks'
                 IsEnabled="{Binding EnableCAD}"
                 IsChecked="{Binding IsCheckedCAD}"

@@ -34,17 +34,17 @@ namespace Purge_Rooms_UI
             get { return _enableIMG; }
             set { _enableIMG = value; RaisePropertyChanged(() => EnableIMG); }
         }
-        private bool _enableView;
-        public bool EnableView
+        private bool _enableViews;
+        public bool EnableViews
         {
-            get { return _enableView; }
-            set { _enableView = value; RaisePropertyChanged(() => EnableView); }
+            get { return _enableViews; }
+            set { _enableViews = value; RaisePropertyChanged(() => EnableViews); }
         }
-        private bool _enableCoordView;
-        public bool EnableCoordView
+        private bool _enableCoordViews;
+        public bool EnableCoordViews
         {
-            get { return _enableCoordView; }
-            set { _enableCoordView = value; RaisePropertyChanged(() => EnableCoordView); }
+            get { return _enableCoordViews; }
+            set { _enableCoordViews = value; RaisePropertyChanged(() => EnableCoordViews); }
         }
         private bool _enableLib;
         public bool EnableLib
@@ -52,11 +52,11 @@ namespace Purge_Rooms_UI
             get { return _enableLib; }
             set { _enableLib = value; RaisePropertyChanged(() => EnableLib); }
         }
-        private bool _enableGroup;
-        public bool EnableGroup
+        private bool _enableGroups;
+        public bool EnableGroups
         {
-            get { return _enableGroup; }
-            set { _enableGroup = value; RaisePropertyChanged(() => EnableGroup); }
+            get { return _enableGroups; }
+            set { _enableGroups = value; RaisePropertyChanged(() => EnableGroups); }
         }
         private bool _exportIFC;
         public bool ExportIFC
@@ -74,70 +74,108 @@ namespace Purge_Rooms_UI
 
         #region CkechBoxes status
         // Set CheckBoxes status
+        private bool _isCheckedAll;
+        public bool IsCheckedAll
+        {
+            get { return _isCheckedAll; }
+            set {
+                _isCheckedAll = value;
+                RaisePropertyChanged(() => IsCheckedAll);
+                if (_isCheckedAll)
+                {
+                    if (EnableRVT) IsCheckedRVT = true;
+                    if (EnableCAD) IsCheckedCAD = true;
+                    if (EnableIMG) IsCheckedIMG = true;
+                    if (EnableViews) IsCheckedViews = true;
+                    if (EnableCoordViews) IsCheckedNonCoordViews = true;
+                    if (EnableLib) IsCheckedLib = true;
+                    if (EnableGroups) IsCheckedGroups = true;
+                    IsCheckedIFC = true;
+                    IsCheckedNWC = true;
+                }
+            }
+        }
         private bool _isCheckedRVT;
         public bool IsCheckedRVT
         {
             get { return _isCheckedRVT; }
-            set { _isCheckedRVT = value; RaisePropertyChanged(() => IsCheckedRVT);}
+            set { _isCheckedRVT = value; RaisePropertyChanged(() => IsCheckedRVT);
+                if (IsCheckedRVT == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedCAD;
         public bool IsCheckedCAD
         {
             get { return _isCheckedCAD; }
-            set { _isCheckedCAD = value; RaisePropertyChanged(() => IsCheckedCAD); }
+            set { _isCheckedCAD = value; RaisePropertyChanged(() => IsCheckedCAD);
+                if (IsCheckedCAD == false) IsCheckedAll = false;            
+            }
         }
         private bool _isCheckedIMG;
         public bool IsCheckedIMG
         {
             get { return _isCheckedIMG; }
-            set { _isCheckedIMG = value; RaisePropertyChanged(() => IsCheckedIMG); }
+            set { _isCheckedIMG = value; RaisePropertyChanged(() => IsCheckedIMG);
+                if (IsCheckedIMG == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedViews;
         public bool IsCheckedViews
         {
             get { return _isCheckedViews; }
-            set { _isCheckedViews = value; RaisePropertyChanged(() => IsCheckedViews); }
+            set { _isCheckedViews = value; RaisePropertyChanged(() => IsCheckedViews);
+                if (IsCheckedViews == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedNonCoordViews;
         public bool IsCheckedNonCoordViews
         {
             get { return _isCheckedNonCoordViews; }
-            set { _isCheckedNonCoordViews = value; RaisePropertyChanged(() => IsCheckedNonCoordViews); }
+            set { _isCheckedNonCoordViews = value; RaisePropertyChanged(() => IsCheckedNonCoordViews);
+                if (IsCheckedNonCoordViews == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedLib;
         public bool IsCheckedLib
         {
             get { return _isCheckedLib; }
-            set { _isCheckedLib = value; RaisePropertyChanged(() => IsCheckedLib); }
+            set { _isCheckedLib = value; RaisePropertyChanged(() => IsCheckedLib);
+                if (IsCheckedLib == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedGroups;
         public bool IsCheckedGroups
         {
             get { return _isCheckedGroups; }
-            set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups); }
+            set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups);
+                if (IsCheckedGroups == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedIFC;
         public bool IsCheckedIFC
         {
             get { return _isCheckedIFC; }
-            set { _isCheckedIFC = value; RaisePropertyChanged(() => IsCheckedIFC); }
+            set { _isCheckedIFC = value; RaisePropertyChanged(() => IsCheckedIFC);
+                if (IsCheckedIFC == false) IsCheckedAll = false;
+            }
         }
         private bool _isCheckedNWC;
         public bool IsCheckedNWC
         {
             get { return _isCheckedNWC; }
-            set { _isCheckedNWC = value; RaisePropertyChanged(() => IsCheckedNWC); }
+            set { _isCheckedNWC = value; RaisePropertyChanged(() => IsCheckedNWC);
+                if (IsCheckedNWC == false) IsCheckedAll = false;
+            }
         }
         #endregion
 
-        // Meta-data labels
+        #region Meta-data labels
         private string _inputText;
         public string InputText
         {
             get { return _inputText; }
             set { _inputText = value; RaisePropertyChanged(() => InputText); }
         }
-
         private string _issuedTo;
         public string IssuedTo
         {
@@ -180,7 +218,7 @@ namespace Purge_Rooms_UI
             get { return _activeView; }
             set { _activeView = value; RaisePropertyChanged(() => ActiveView); }
         }
-
+        #endregion
 
 
 
@@ -190,14 +228,14 @@ namespace Purge_Rooms_UI
         {
             Model = model;
 
-            // Set CheckBox enabled if the model contains relevant elements 
+            // Set CheckBox enabled if the model contains relevant elements
             EnableRVT = model.EnableRVTLinks();
             EnableCAD = model.EnableCADLinks();
             EnableIMG = model.EnableIMGLinks();
-            EnableView = model.EnableViews();
-            EnableCoordView = model.EnableCoordViews();
+            EnableViews = model.EnableViews();
+            EnableCoordViews = model.EnableCoordViews();
             EnableLib = model.EnableLibPhase();
-            EnableGroup = model.EnableGroups();
+            EnableGroups = model.EnableGroups();
 
             // Set initial revision parameter values
             ActiveView = model.ReportActiveView();
