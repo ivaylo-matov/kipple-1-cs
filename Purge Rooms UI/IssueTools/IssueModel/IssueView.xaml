@@ -14,7 +14,8 @@
         FontWeight="Light"
         Width='460'
         Height='700'
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Icon="/Purge_Rooms_UI;Component/Resources/kipl_black.ico">
 
 
 

@@ -270,6 +270,9 @@
   <ItemGroup>
     <Resource Include="Resources\ACGLogo.jpg" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\kipl_black.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

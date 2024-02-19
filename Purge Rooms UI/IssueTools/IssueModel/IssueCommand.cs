@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.ApplicationServices;
 using System;
 using System.Reflection;
 using System.Windows.Media.Imaging;
@@ -15,12 +16,14 @@ namespace Purge_Rooms_UI
             try
             {
                 UIApplication uiapp = commandData.Application;
+                Application app = uiapp.Application;
 
                 IssueModel model = new IssueModel(uiapp);
                 IssueViewModel viewModel = new IssueViewModel(model);
                 IssueView view = new IssueView { DataContext = viewModel };
 
                 view.ShowDialog();
+
                 return Result.Succeeded;
             }
             catch (Exception ex) { return Result.Failed; }

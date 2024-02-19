@@ -1,4 +1,4 @@
-﻿// Ignore Spelling: Coord
+﻿// Ignore Spelling: Coord Preprocess
 
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Analysis;
@@ -307,6 +307,13 @@ namespace Purge_Rooms_UI
             using (Transaction tViews = new Transaction(Doc, "Remove Sheets & Views"))
             {
                 tViews.Start();
+
+                // register to hide warnings
+                FailureHandlingOptions options = tViews.GetFailureHandlingOptions();
+                HideWarnings hideWarnings = new HideWarnings();
+                options.SetFailuresPreprocessor(hideWarnings);
+                tViews.SetFailureHandlingOptions(options);
+
                 foreach (var i in LogAllViews)
                 {
                     try { Doc.Delete(i.Id); }
@@ -328,6 +335,13 @@ namespace Purge_Rooms_UI
             using (Transaction tViews = new Transaction(Doc, "Remove Non Coordination Sheets & Views"))
             {
                 tViews.Start();
+
+                // register to hide warnings
+                FailureHandlingOptions options = tViews.GetFailureHandlingOptions();
+                HideWarnings hideWarnings = new HideWarnings();
+                options.SetFailuresPreprocessor(hideWarnings);
+                tViews.SetFailureHandlingOptions(options);
+
                 foreach (ElementId id in nonProtectedViews)
                 {
                     if (!LogCoordViewIds.Contains(id))
@@ -344,6 +358,12 @@ namespace Purge_Rooms_UI
             using (Transaction tLib = new Transaction(Doc, "Remove Elements from Library phase"))
             {
                 tLib.Start();
+
+                // register to hide warnings
+                FailureHandlingOptions options = tLib.GetFailureHandlingOptions();
+                HideWarnings hideWarnings = new HideWarnings();
+                options.SetFailuresPreprocessor(hideWarnings);
+                tLib.SetFailureHandlingOptions(options);
 
                 // delete the groups first - collect all model groups
                 var allGroups = new FilteredElementCollector(Doc)
@@ -383,16 +403,20 @@ namespace Purge_Rooms_UI
                     try { Doc.Delete(id); }
                     catch { }
                 }
-
                 tLib.Commit();
             }
-
         }
         public void UngroupGroups()
         {
             using (Transaction tGroup = new Transaction(Doc, "Ungroup all model groups"))
             {
                 tGroup.Start();
+
+                // register to hide warnings
+                FailureHandlingOptions options = tGroup.GetFailureHandlingOptions();
+                HideWarnings hideWarnings = new HideWarnings();
+                options.SetFailuresPreprocessor(hideWarnings);
+                tGroup.SetFailureHandlingOptions(options);
 
                 // delete host (not nested) groups first
                 foreach (var group in LogModelGroups)
@@ -412,7 +436,6 @@ namespace Purge_Rooms_UI
                     try { group.UngroupMembers(); }
                     catch { }
                 }
-
                 tGroup.Commit();
             }
         }
@@ -455,7 +478,7 @@ namespace Purge_Rooms_UI
                 tIMG.Commit();
             }
         }
-        public void PurgeModel()
+        public void PurgeModel_Old()
         {
             PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
             var allRulesList = perfAd.GetAllRuleIds();
@@ -504,6 +527,38 @@ namespace Purge_Rooms_UI
                     }
                 }
 
+                tPurge.Commit();
+            }
+        }
+        public void PurgeModel()
+        {
+            using (Transaction tPurge = new Transaction(Doc, "Purge"))
+            {
+                tPurge.Start();
+
+                PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
+                var allRulesList = perfAd.GetAllRuleIds();
+                var rulesToExecute = new List<PerformanceAdviserRuleId>();
+
+                foreach (PerformanceAdviserRuleId r in allRulesList)
+                {
+                    if (perfAd.GetRuleName(r).Equals("Project contains unused families and types"))
+                    {
+                        rulesToExecute.Add(r);
+                    }
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    IList<FailureMessage> failMessages = perfAd.ExecuteRules(Doc, rulesToExecute);
+                    if (failMessages.Count() == 0) return;
+
+                    ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
+                    foreach (ElementId id in failingElementIds)
+                    {
+                        try { Doc.Delete(id); }
+                        catch { }
+                    }
+                }  
                 tPurge.Commit();
             }
         }
@@ -591,8 +646,38 @@ namespace Purge_Rooms_UI
         }
         #endregion
 
-        
 
+        /// <summary>
+        /// Hides any warnings Revit might throw back but passes Errors to the user
+        /// </summary>
+        public class HideWarnings : IFailuresPreprocessor
+        {
+            public FailureProcessingResult PreprocessFailures(FailuresAccessor failureAccelerator)
+            {
+                IList<FailureMessageAccessor> failureMessages = failureAccelerator.GetFailureMessages();
+                foreach (FailureMessageAccessor failureMessage in failureMessages)
+                {
+                    if (failureMessage.GetDescriptionText().Contains("Last member of group instance was excluded (deleted)"))
+                    {
+                        failureMessage.SetCurrentResolutionType(FailureResolutionType.Default);
+                        failureAccelerator.ResolveFailure(failureMessage);
+                    }
+                    else if (failureMessage.GetSeverity() == FailureSeverity.Warning)
+                    {
+                        failureAccelerator.DeleteWarning(failureMessage);
+                    }
+                    else if (failureMessage.GetSeverity() == FailureSeverity.Error)
+                    {
+                        if (failureMessage.GetDescriptionText().Contains("joined"))
+                        {
+                            failureMessage.SetCurrentResolutionType(FailureResolutionType.DetachElements);
+                            failureAccelerator.ResolveFailure(failureMessage);
+                        }
+                    }
+                }
+                return FailureProcessingResult.Continue;
+            }
+        }
 
         public static void SuspendWarnings(UIControlledApplication application)
         {

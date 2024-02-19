@@ -214,6 +214,7 @@ namespace Purge_Rooms_UI
         }
         private void OnExecuteRun(Window win)
         {
+
             if (TargetDir != IssueModel.TargetFolderNotFoundMessage)
             {
                 try
