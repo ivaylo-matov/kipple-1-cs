@@ -652,16 +652,12 @@ namespace Purge_Rooms_UI
 
         public void CreateProjectParameter(string parameterName, string groupName, string type, string group, bool instance, System.Collections.Generic.IEnumerable<Category> categoryList)
         {
-            // parse parameter type
-            //var parameterType = Autodesk.Revit.DB.ParameterType.Text;                                       // !!!
-            var parameterType = SpecTypeId.String.Text;
-            //if (!System.Enum.TryParse<Autodesk.Revit.DB.ParameterType>(type, out parameterType))            // !!!
-            //    throw new System.Exception(Properties.Resources.ParameterTypeNotFound);                     // !!!
+            // get the Project Information category
 
-            // parse parameter group
-            var parameterGroup = Autodesk.Revit.DB.BuiltInParameterGroup.PG_DATA;                                   
-            //if (!System.Enum.TryParse<Autodesk.Revit.DB.BuiltInParameterGroup>(group, out parameterGroup))
-            //    throw new System.Exception(Properties.Resources.ParameterTypeNotFound);
+
+            // get parameter type & group
+            var parameterType = SpecTypeId.String.Text;
+            var parameterGroup = BuiltInParameterGroup.PG_IDENTITY_DATA;   
 
             using (Transaction tNewParam = new Transaction(Doc, "Create New Param"))
             {
@@ -697,8 +693,6 @@ namespace Purge_Rooms_UI
 
                     // delete temp shared parameter file
                     System.IO.File.Delete(tempSharedParameterFile);
-
-
                 }
                 catch (Exception ex) { }
 
