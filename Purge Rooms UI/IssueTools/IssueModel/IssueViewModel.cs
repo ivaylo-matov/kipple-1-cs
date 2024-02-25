@@ -87,7 +87,7 @@ namespace Purge_Rooms_UI
                     if (EnableCAD) IsCheckedCAD = true;
                     if (EnableIMG) IsCheckedIMG = true;
                     if (EnableViews) IsCheckedViews = true;
-                    if (EnableCoordViews) IsCheckedNonCoordViews = true;
+                    if (EnableCoordViews) IsCheckedNonCoordViews = false;
                     if (EnableLib) IsCheckedLib = true;
                     if (EnableGroups) IsCheckedGroups = true;
                     IsCheckedIFC = true;
@@ -100,7 +100,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedRVT; }
             set { _isCheckedRVT = value; RaisePropertyChanged(() => IsCheckedRVT);
-                if (IsCheckedRVT == false) IsCheckedAll = false;
+                if (!IsCheckedRVT) IsCheckedAll = false;
             }
         }
         private bool _isCheckedCAD;
@@ -108,7 +108,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedCAD; }
             set { _isCheckedCAD = value; RaisePropertyChanged(() => IsCheckedCAD);
-                if (IsCheckedCAD == false) IsCheckedAll = false;            
+                if (!IsCheckedCAD) IsCheckedAll = false;            
             }
         }
         private bool _isCheckedIMG;
@@ -116,7 +116,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedIMG; }
             set { _isCheckedIMG = value; RaisePropertyChanged(() => IsCheckedIMG);
-                if (IsCheckedIMG == false) IsCheckedAll = false;
+                if (!IsCheckedIMG) IsCheckedAll = false;
             }
         }
         private bool _isCheckedViews;
@@ -124,7 +124,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedViews; }
             set { _isCheckedViews = value; RaisePropertyChanged(() => IsCheckedViews);
-                if (IsCheckedViews == false) IsCheckedAll = false;
+                if (!IsCheckedViews) IsCheckedAll = false;
             }
         }
         private bool _isCheckedNonCoordViews;
@@ -132,7 +132,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedNonCoordViews; }
             set { _isCheckedNonCoordViews = value; RaisePropertyChanged(() => IsCheckedNonCoordViews);
-                if (IsCheckedNonCoordViews == false) IsCheckedAll = false;
+                if (IsCheckedNonCoordViews) IsCheckedAll = false;
             }
         }
         private bool _isCheckedLib;
@@ -140,7 +140,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedLib; }
             set { _isCheckedLib = value; RaisePropertyChanged(() => IsCheckedLib);
-                if (IsCheckedLib == false) IsCheckedAll = false;
+                if (!IsCheckedLib) IsCheckedAll = false;
             }
         }
         private bool _isCheckedGroups;
@@ -148,7 +148,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedGroups; }
             set { _isCheckedGroups = value; RaisePropertyChanged(() => IsCheckedGroups);
-                if (IsCheckedGroups == false) IsCheckedAll = false;
+                if (!IsCheckedGroups) IsCheckedAll = false;
             }
         }
         private bool _isCheckedIFC;
@@ -156,7 +156,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedIFC; }
             set { _isCheckedIFC = value; RaisePropertyChanged(() => IsCheckedIFC);
-                if (IsCheckedIFC == false) IsCheckedAll = false;
+                if (!IsCheckedIFC) IsCheckedAll = false;
             }
         }
         private bool _isCheckedNWC;
@@ -164,7 +164,7 @@ namespace Purge_Rooms_UI
         {
             get { return _isCheckedNWC; }
             set { _isCheckedNWC = value; RaisePropertyChanged(() => IsCheckedNWC);
-                if (IsCheckedNWC == false) IsCheckedAll = false;
+                if (!IsCheckedNWC) IsCheckedAll = false;
             }
         }
         #endregion
@@ -252,7 +252,6 @@ namespace Purge_Rooms_UI
         }
         private void OnExecuteRun(Window win)
         {
-
             if (TargetDir != IssueModel.TargetFolderNotFoundMessage)
             {
                 try

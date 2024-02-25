@@ -8,10 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using UIFramework;
-using WinForms = System.Windows.Forms;
 
 namespace Purge_Rooms_UI
 {
@@ -148,6 +144,14 @@ namespace Purge_Rooms_UI
             {
                 string projectDir = info.LookupParameter("Project Directory").AsValueString();
                 targetDir = $"{projectDir}\\01 WIP - Internal Work\\{DateTime.Now.ToString("yyMMdd")}";
+            }
+            else
+            {
+                Category prjInfo = Category.GetCategory(Doc, BuiltInCategory.OST_ProjectInformation);
+                List<Category> cats = new List<Category>();
+                cats.Add(prjInfo);
+
+                CreateProjectParameter("Project Directory", "test", "Text", "Identity Data", true, cats);
             }
 
             ICollection<ElementId> currentRevs = splashScr.GetAdditionalRevisionIds();
@@ -478,63 +482,18 @@ namespace Purge_Rooms_UI
                 tIMG.Commit();
             }
         }
-        public void PurgeModel_Old()
-        {
-            PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
-            var allRulesList = perfAd.GetAllRuleIds();
-            var rulesToExecute = new List<PerformanceAdviserRuleId>();
-            foreach (PerformanceAdviserRuleId r in allRulesList)
-            {
-                if (perfAd.GetRuleName(r).Equals("Project contains unused families and types"))
-                {
-                    rulesToExecute.Add(r);
-                }
-            }
 
-            using (Transaction tPurge = new Transaction(Doc, "Purge"))
-            {
-                tPurge.Start();
-
-                for (int i = 0; i < 3; i++)
-                {
-                    IList<FailureMessage> failMessages = perfAd.ExecuteRules(Doc, rulesToExecute);
-                    if (failMessages.Count() == 0) return;
-
-                    ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
-                    foreach (ElementId id in failingElementIds)
-                    {
-                        try
-                        {
-                            Doc.Delete(id);
-                        }
-                        catch { }
-                    }
-                }
-                Doc.Regenerate();
-                for (int i = 0; i < 3; i++)
-                {
-                    IList<FailureMessage> failMessages = perfAd.ExecuteRules(Doc, rulesToExecute);
-                    if (failMessages.Count() == 0) return;
-
-                    ICollection<ElementId> failingElementIds = failMessages[0].GetFailingElements();
-                    foreach (ElementId id in failingElementIds)
-                    {
-                        try
-                        {
-                            Doc.Delete(id);
-                        }
-                        catch { }
-                    }
-                }
-
-                tPurge.Commit();
-            }
-        }
         public void PurgeModel()
         {
             using (Transaction tPurge = new Transaction(Doc, "Purge"))
             {
                 tPurge.Start();
+
+                // register to hide warnings
+                FailureHandlingOptions options = tPurge.GetFailureHandlingOptions();
+                HideWarnings hideWarnings = new HideWarnings();
+                options.SetFailuresPreprocessor(hideWarnings);
+                tPurge.SetFailureHandlingOptions(options);
 
                 PerformanceAdviser perfAd = PerformanceAdviser.GetPerformanceAdviser();
                 var allRulesList = perfAd.GetAllRuleIds();
@@ -654,27 +613,28 @@ namespace Purge_Rooms_UI
         {
             public FailureProcessingResult PreprocessFailures(FailuresAccessor failureAccelerator)
             {
-                IList<FailureMessageAccessor> failureMessages = failureAccelerator.GetFailureMessages();
-                foreach (FailureMessageAccessor failureMessage in failureMessages)
-                {
-                    if (failureMessage.GetDescriptionText().Contains("Last member of group instance was excluded (deleted)"))
-                    {
-                        failureMessage.SetCurrentResolutionType(FailureResolutionType.Default);
-                        failureAccelerator.ResolveFailure(failureMessage);
-                    }
-                    else if (failureMessage.GetSeverity() == FailureSeverity.Warning)
-                    {
-                        failureAccelerator.DeleteWarning(failureMessage);
-                    }
-                    else if (failureMessage.GetSeverity() == FailureSeverity.Error)
-                    {
-                        if (failureMessage.GetDescriptionText().Contains("joined"))
-                        {
-                            failureMessage.SetCurrentResolutionType(FailureResolutionType.DetachElements);
-                            failureAccelerator.ResolveFailure(failureMessage);
-                        }
-                    }
-                }
+                failureAccelerator.DeleteAllWarnings();
+                //IList<FailureMessageAccessor> failureMessages = failureAccelerator.GetFailureMessages();
+                //foreach (FailureMessageAccessor failureMessage in failureMessages)
+                //{
+                //    if (failureMessage.GetDescriptionText().Contains("Last member of group instance was excluded (deleted)"))
+                //    {
+                //        failureMessage.SetCurrentResolutionType(FailureResolutionType.SkipElements);
+                //        failureAccelerator.ResolveFailure(failureMessage);
+                //    }
+                //    else if (failureMessage.GetSeverity() == FailureSeverity.Warning)
+                //    {
+                //        failureAccelerator.DeleteWarning(failureMessage);
+                //    }
+                //    else if (failureMessage.GetSeverity() == FailureSeverity.Error)
+                //    {
+                //        if (failureMessage.GetDescriptionText().Contains("joined"))
+                //        {
+                //            failureMessage.SetCurrentResolutionType(FailureResolutionType.DetachElements);
+                //            failureAccelerator.ResolveFailure(failureMessage);
+                //        }
+                //    }
+                //}
                 return FailureProcessingResult.Continue;
             }
         }
@@ -689,5 +649,95 @@ namespace Purge_Rooms_UI
             // call our method that will load up our toolbar
             application.ControlledApplication.FailuresProcessing -= new EventHandler<FailuresProcessingEventArgs>(FailurePreprocessor_Event.ProcessFailuresEvents);
         }
+
+        public void CreateProjectParameter(string parameterName, string groupName, string type, string group, bool instance, System.Collections.Generic.IEnumerable<Category> categoryList)
+        {
+            // parse parameter type
+            //var parameterType = Autodesk.Revit.DB.ParameterType.Text;                                       // !!!
+            var parameterType = SpecTypeId.String.Text;
+            //if (!System.Enum.TryParse<Autodesk.Revit.DB.ParameterType>(type, out parameterType))            // !!!
+            //    throw new System.Exception(Properties.Resources.ParameterTypeNotFound);                     // !!!
+
+            // parse parameter group
+            var parameterGroup = Autodesk.Revit.DB.BuiltInParameterGroup.PG_DATA;                                   
+            //if (!System.Enum.TryParse<Autodesk.Revit.DB.BuiltInParameterGroup>(group, out parameterGroup))
+            //    throw new System.Exception(Properties.Resources.ParameterTypeNotFound);
+
+            using (Transaction tNewParam = new Transaction(Doc, "Create New Param"))
+            {
+                tNewParam.Start();
+
+                try
+                {
+                    // buffer the current shared parameter file name and apply a new empty parameter file instead
+                    string sharedParameterFile = Doc.Application.SharedParametersFilename;
+                    string tempSharedParameterFile = System.IO.Path.GetTempFileName() + ".txt";
+                    using (System.IO.File.Create(tempSharedParameterFile)) { }
+                    Doc.Application.SharedParametersFilename = tempSharedParameterFile;
+
+                    // Apply selected parameter categories
+                    CategorySet categories = (categoryList == null) ? AllCategories() : ToCategorySet(categoryList);
+
+                    // create a new shared parameter, since the file is empty everything has to be created from scratch
+                    ExternalDefinition def =
+                        Doc.Application.OpenSharedParameterFile()
+                        .Groups.Create(groupName).Definitions.Create(
+                        new ExternalDefinitionCreationOptions(parameterName, parameterType)) as ExternalDefinition;
+
+                    // Create an instance or type binding
+                    Binding bin = (instance) ?
+                        (Binding)Doc.Application.Create.NewInstanceBinding(categories) :
+                        (Binding)Doc.Application.Create.NewTypeBinding(categories);
+
+                    // Apply parameter bindings
+                    Doc.ParameterBindings.Insert(def, bin, parameterGroup);
+
+                    // apply old shared parameter file
+                    Doc.Application.SharedParametersFilename = sharedParameterFile;
+
+                    // delete temp shared parameter file
+                    System.IO.File.Delete(tempSharedParameterFile);
+
+
+                }
+                catch (Exception ex) { }
+
+                tNewParam.Commit();
+            } 
+        }
+
+        /// <summary>
+        /// Get a CategorySet for all categories
+        /// </summary>
+        /// <returns></returns>
+        internal CategorySet AllCategories()
+        {
+            // Apply selected parameter categories
+            CategorySet categories = Doc.Application.Create.NewCategorySet();
+
+            // Walk through all categories and add them if they allow bound parameters
+            foreach (Autodesk.Revit.DB.Category cat in Doc.Settings.Categories)
+            {
+                if (cat.AllowsBoundParameters) categories.Insert(cat);
+            }
+            return categories;
+        }
+        /// <summary>
+        /// Convert a list of categories to a category set
+        /// </summary>
+        /// <param name="categoryList"></param>
+        /// <returns></returns>
+        internal CategorySet ToCategorySet(System.Collections.Generic.IEnumerable<Category> categoryList)
+        {
+            // Apply selected parameter categories
+            CategorySet categories = Doc.Application.Create.NewCategorySet();
+
+            foreach (Category category in categoryList)
+            {
+                if (category.AllowsBoundParameters) categories.Insert(category);
+            }
+            return categories;
+        }
+
     }
 }

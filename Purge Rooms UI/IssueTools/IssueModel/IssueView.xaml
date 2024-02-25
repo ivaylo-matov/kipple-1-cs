@@ -23,6 +23,7 @@
 
         <Style x:Key="TriggerStyle" TargetType="Button">
             <Setter Property="Background" Value="Black"/>
+            
             <Style.Triggers>
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="Foreground" Value="Blue"/>
@@ -62,8 +63,10 @@
         </ControlTemplate>
 
     </Window.Resources>
+    
 
     <Grid>
+<!--Grid Definition-->
         <Grid.RowDefinitions>
             <RowDefinition Height="90"/>
             <RowDefinition Height="Auto"/>
@@ -93,7 +96,7 @@
             Background="White"                  
             Margin='10,5,10,0'>
             <Label Content='Prepare model for issue'
-                FontSize="30"
+                FontSize="32"
                 FontWeight="Bold"
                 FontFamily="Calibri"/>
             <Label Content='Remove content from the model before releasing to stakeholders.'
@@ -113,8 +116,7 @@
             <Label Content="{Binding ActiveView, StringFormat='{}{0}'}" FontSize="12"
                    Height="23" Margin="3,0,0,5" Foreground="#4b4b4b"/>
         </StackPanel>
-
-
+        
 <!--Issue Data-->
         <StackPanel Grid.Row="2" Grid.Column="0" Margin="10,10,10,0">
             
@@ -171,6 +173,7 @@
             <Separator Margin='5,10,5,0'/>
             
         </StackPanel>
+        
 <!--CheckBoxes-->
         <StackPanel Grid.Row="3" Margin="15,5,10,0">
             <CheckBox x:Name='chkCleanAll'
@@ -223,7 +226,7 @@
                 IsChecked="{Binding IsCheckedNWC}"/>
             <Separator Margin='0,10,0,0' />
             
-        </StackPanel>
+        </StackPanel>   
         
 <!--Run Button-->
         <StackPanel Grid.Row="4" Height="50">
@@ -240,9 +243,7 @@
                 Margin='10'
                 Command="{Binding Process}"
                 CommandParameter="{Binding ElementName=IssueModelWindow}"/>                
-        </StackPanel>
-        
-<!--Style="{StaticResource TriggerStyle}"-->
+        </StackPanel>   
 
     </Grid>
 </Window>
